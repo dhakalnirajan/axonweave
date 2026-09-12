@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">AxonWeave Brand Identity Logo</title>
+  <desc id="desc">A precision-engineered woven neural axon mark featuring interlaced pathways, a multi-tiered central soma node, and color-coded synapse terminals on a charcoal tile.</desc>
+  
+  <!-- Phase 1: Mathematical & Grid Foundation (Canvas & Background Container) -->
+  <rect width="256" height="256" rx="56" fill="#121212"/>
+  
+  <!-- Phase 2: Biological Pathway & Weave Architecture -->
+  <!-- Strand A: Primary Neural Substrate (Steel-Blue #b7e2ef) -->
+  <g fill="none" stroke="#b7e2ef" stroke-width="12" stroke-linecap="round">
+    <path d="M40 76 C88 76 104 128 128 128 C152 128 168 180 216 180"/>
+    <path d="M40 180 C88 180 104 128 128 128 C152 128 168 76 216 76"/>
+  </g>
+  
+  <!-- Strand B: Computational Interpretation Layer (Brand Coral-Red #ee4c2c with physical over/under layout) -->
+  <g fill="none" stroke="#ee4c2c" stroke-width="12" stroke-linecap="round">
+    <path d="M48 64 C96 72 112 132 160 176 C176 190 196 196 214 194" opacity="0.95"/>
+    <path d="M48 192 C96 184 112 124 160 80 C176 66 196 60 214 62" opacity="0.95"/>
+  </g>
+  
+  <!-- Phase 3: Focal Nodes & Soma Core -->
+  <!-- Central Soma Node (Multi-tiered biological processing hub at 128,128) -->
+  <circle cx="128" cy="128" r="20" fill="#121212"/>
+  <circle cx="128" cy="128" r="17" fill="#121212" stroke="#b7e2ef" stroke-width="6"/>
+  <circle cx="128" cy="128" r="6" fill="#ee4c2c"/>
+  
+  <!-- Synapse Terminals (Contact anchors mapped to strand endpoints) -->
+  <circle cx="40" cy="76" r="8" fill="#b7e2ef"/>
+  <circle cx="40" cy="180" r="8" fill="#b7e2ef"/>
+  <circle cx="216" cy="76" r="8" fill="#ee4c2c"/>
+  <circle cx="216" cy="180" r="8" fill="#ee4c2c"/>
+</svg>
