@@ -102,6 +102,30 @@ layer = ConnectomeLayer(
 )
 ```
 
+## JAX
+
+```bash
+pip install "axonweave[jax]"
+```
+
+```python
+import jax.numpy as jnp
+from axonweave.jax import ConnectomeLayer
+
+layer = ConnectomeLayer(
+    brain.graph,
+    trainable_edges=True,
+    learnable_gain=True,
+)
+
+x = jnp.zeros((1, brain.n_neurons), dtype=jnp.float32)
+y = layer(x)
+```
+
+:::DOC-NOTE
+The JAX adapter is experimental. The layer, brain model and block APIs are written and tested against the NumPy reference, but CI verification across JAX versions is pending. See [Backends](backends.md) for details.
+:::
+
 ## Constraints
 
 A full-connectome state is large. Production applications should deliberately select input projection, internal state, readout and batching strategies. Do not assume a full dense tensor of all neurons is cheap simply because the graph itself is sparse.

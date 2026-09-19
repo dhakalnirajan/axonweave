@@ -248,7 +248,7 @@ const page=pages.find(p=>p.slug===slug);
        <a href={hrefFor('core-concepts')} onClick={e=>{e.preventDefault();navigate('core-concepts')}}>Learn</a>
        <a href={hrefFor('api-reference')} onClick={e=>{e.preventDefault();navigate('api-reference')}}>API</a>
        <a href={hrefFor('tasks')} onClick={e=>{e.preventDefault();navigate('tasks')}}>Tutorials</a>
-       <a href={hrefFor('playground')} onClick={e=>{e.preventDefault();navigate('playground')}}>Playground</a>
+        <a className="nav-playground" href={hrefFor('playground')} onClick={e=>{e.preventDefault();navigate('playground')}}>Playground</a>
        <a href="https://github.com/dhakalnirajan/axonweave" target="_blank" rel="noreferrer">GitHub</a>
      </nav>
      <button className="search-trigger" onClick={()=>setSearchOpen(true)} aria-label="Search documentation (Shift+/)"><FiSearch size={15}/><span>Search documentation...</span><kbd>Shift+/</kbd></button>

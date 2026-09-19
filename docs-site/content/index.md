@@ -127,7 +127,7 @@ See [Scientific Reference](scientific-reference.md).
 | NumPy/SciPy | included | Reference implementation |
 | PyTorch | `pip install "axonweave[torch]"` | Stable layer; experimental high-level API |
 | TensorFlow/Keras | `pip install "axonweave[tensorflow]"` | Stable layer |
-| JAX | `pip install "axonweave[jax]"` | Experimental (adapter written; verification pending) |
+| JAX | `pip install "axonweave[jax]"` | Experimental (adapter + 22 tests written; CI verification pending) |
 
 See [Backends](backends.md).
 
