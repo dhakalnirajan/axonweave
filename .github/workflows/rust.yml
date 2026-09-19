@@ -1,5 +1,7 @@
 name: Rust and PyO3
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   rust:
     strategy:
