@@ -8,7 +8,7 @@ import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-toml';
 import 'prismjs/components/prism-powershell';
-import { FiMenu, FiMoon, FiSun, FiSearch, FiX, FiChevronRight, FiThumbsUp, FiThumbsDown, FiChevronDown } from 'react-icons/fi';
+import { FiMenu, FiMoon, FiSun, FiSearch, FiX, FiChevronRight, FiThumbsUp, FiThumbsDown, FiChevronDown, FiZap, FiGithub } from 'react-icons/fi';
 import './style.css';
 
 import indexMd from '../content/index.md?raw';
@@ -240,35 +240,48 @@ const page=pages.find(p=>p.slug===slug);
  useEffect(()=>{document.title=page?`${page.label} · AxonWeave`: 'Page not found · AxonWeave'; const domain=import.meta.env.VITE_ANALYTICS_DOMAIN as string|undefined; if(domain && !document.querySelector('script[data-axonweave-analytics]')){const script=document.createElement('script');script.defer=true;script.dataset.domain=domain;script.dataset.axonweaveAnalytics='true';script.src=`https://plausible.io/js/script.js`;document.head.appendChild(script)}},[page]);
  const sections=[...new Set(pages.map(p=>p.section))];
  const navigate=(s:string)=>{history.pushState({},'',hrefFor(s));setSlug(s);setMobile(false);jumpToTop()};
- return <><Helmet><meta name="description" content={page?`AxonWeave ${page.label} documentation`: 'AxonWeave documentation'}/><meta property="og:title" content={page?`${page.label} · AxonWeave`:'AxonWeave Documentation'}/><meta property="og:description" content={page?`AxonWeave ${page.label} documentation`:'AxonWeave documentation'}/><meta name="twitter:card" content="summary"/></Helmet><div className="app">
-   <header className="topbar">
-     <button className="icon-button mobile-menu" onClick={()=>setMobile(!mobile)} aria-label="Open navigation"><FiMenu size={20}/></button>
-     <a className="brand" href="/" onClick={e=>{e.preventDefault();navigate('index')}}><img src={`${BASE}logo.svg`} alt="AxonWeave"/><span>AxonWeave</span></a>
-     <nav className="topnav">
-       <a href={hrefFor('core-concepts')} onClick={e=>{e.preventDefault();navigate('core-concepts')}}>Learn</a>
-       <a href={hrefFor('api-reference')} onClick={e=>{e.preventDefault();navigate('api-reference')}}>API</a>
-       <a href={hrefFor('tasks')} onClick={e=>{e.preventDefault();navigate('tasks')}}>Tutorials</a>
-        <a className="nav-playground" href={hrefFor('playground')} onClick={e=>{e.preventDefault();navigate('playground')}}>Playground</a>
-       <a href="https://github.com/dhakalnirajan/axonweave" target="_blank" rel="noreferrer">GitHub</a>
-     </nav>
-     <button className="search-trigger" onClick={()=>setSearchOpen(true)} aria-label="Search documentation (Shift+/)"><FiSearch size={15}/><span>Search documentation...</span><kbd>Shift+/</kbd></button>
-     <div className="top-actions">
-       <div className="learn-menu"><button className="learn-trigger version-trigger">{version} <FiChevronDown size={12}/></button><div className="learn-dropdown version-dropdown">{VERSIONS.map(v=><button key={v} className={v===version?'version-item active':'version-item'} onClick={()=>setVersion(v)}>{v}</button>)}</div></div>
-       <button className="icon-button" onClick={()=>setDark(!dark)} aria-label="Toggle theme">{dark?<FiSun size={19}/>:<FiMoon size={19}/>}</button>
-     </div>
-   </header>
-   <div className="shell" style={{'--sidebar-w':`${sidebarWidth}px`} as React.CSSProperties}>
-    {mobile&&<div className="sidebar-overlay visible" onClick={()=>setMobile(false)} aria-hidden="true"/>}
-    <aside className={`sidebar ${mobile?'open':''}`}>
+return <><Helmet><meta name="description" content={page?`AxonWeave ${page.label} documentation`: 'AxonWeave documentation'}/><meta property="og:title" content={page?`${page.label} · AxonWeave`:'AxonWeave Documentation'}/><meta property="og:description" content={page?`AxonWeave ${page.label} documentation`:'AxonWeave documentation'}/><meta name="twitter:card" content="summary"/></Helmet><div className="app">
+    <header className="topbar">
+        <button className="icon-button mobile-menu" onClick={()=>setMobile(!mobile)} aria-label="Open navigation"><FiMenu size={20}/></button>
+        <a className="brand" href="/" onClick={e=>{e.preventDefault();navigate('index')}}><img src={`${BASE}logo.svg`} alt="AxonWeave"/><span>AxonWeave</span></a>
+        <nav className="topnav">
+          <a href={hrefFor('core-concepts')} onClick={e=>{e.preventDefault();navigate('core-concepts')}}>Learn</a>
+          <a href={hrefFor('api-reference')} onClick={e=>{e.preventDefault();navigate('api-reference')}}>API</a>
+          <a href={hrefFor('tasks')} onClick={e=>{e.preventDefault();navigate('tasks')}}>Tutorials</a>
+        </nav>
+        <button className="search-trigger" onClick={()=>setSearchOpen(true)} aria-label="Search documentation (Shift+/)"><FiSearch size={15}/><span>Search documentation...</span><kbd>Shift+/</kbd></button>
+        <div className="top-actions">
+          <div className="learn-menu"><button className="learn-trigger version-trigger">{version} <FiChevronDown size={12}/></button><div className="learn-dropdown version-dropdown">{VERSIONS.map(v=><button key={v} className={v===version?'version-item active':'version-item'} onClick={()=>setVersion(v)}>{v}</button>)}</div></div>
+          <button className="icon-button" onClick={()=>setDark(!dark)} aria-label="Toggle theme">{dark?<FiSun size={19}/>:<FiMoon size={19}/>}</button>
+          <a className="nav-playground-btn" href={hrefFor('playground')} onClick={e=>{e.preventDefault();navigate('playground')}}><FiZap size={15}/> Playground</a>
+          <a className="gh-link" href="https://github.com/dhakalnirajan/axonweave" target="_blank" rel="noreferrer" aria-label="GitHub repository"><FiGithub size={19}/></a>
+        </div>
+      </header>
+    <div className={`shell${slug==='playground'?' pg-shell':''}`} style={{'--sidebar-w':`${sidebarWidth}px`} as React.CSSProperties}>
+    {slug!=='playground'&&mobile&&<div className="sidebar-overlay visible" onClick={()=>setMobile(false)} aria-hidden="true"/>}
+    {slug!=='playground'&&<aside className={`sidebar ${mobile?'open':''}`}>
       <div className="sidebar-header">Documentation <button className="icon-button close-mobile" onClick={()=>setMobile(false)}><FiX size={18}/></button></div>
       {sections.map(section=><div className="nav-section" key={section}><div className="nav-label">{section}</div>{pages.filter(p=>p.section===section).map(p=><a key={p.slug} className={slug===p.slug?'active':''} href={hrefFor(p.slug)} onClick={e=>{e.preventDefault();navigate(p.slug)}}>{p.label}</a>)}</div>)}
-    </aside>
-    <main id="main" className="content">
-      {page?<><nav className="breadcrumbs" aria-label="Breadcrumb"><a className="crumb-link" href={hrefFor('index')} onClick={e=>{e.preventDefault();navigate('index')}}>Docs</a><span>/</span><span className="crumb-here">{page.label}</span></nav><div className="title-row"><h1 style={{display:'none'}}/><div className="title-row-spacer"/><FeedbackWidget slug={slug}/></div>{slug==='playground'?<Playground dark={dark}/>:<article dangerouslySetInnerHTML={{__html:html}}/>}{slug==='index'&&<div className="hero-cta"><button className="primary" onClick={()=>navigate('getting-started')}>Install AxonWeave</button></div>}<CodeEnhancer slug={slug}/><PageNav slug={slug} navigate={navigate}/></>:<NotFound navigate={navigate}/>}
+    </aside>}
+    <main id="main" className={`content${slug==='playground'?' pg-content':''}`}>
+      {page ? (
+        slug === 'playground'
+          ? <Playground dark={dark} />
+          : (
+            <>
+              <nav className="breadcrumbs" aria-label="Breadcrumb"><a className="crumb-link" href={hrefFor('index')} onClick={e=>{e.preventDefault();navigate('index')}}>Docs</a><span>/</span><span className="crumb-here">{page.label}</span></nav>
+              <div className="title-row"><h1 style={{display:'none'}}/><div className="title-row-spacer"/><FeedbackWidget slug={slug}/></div>
+              <article dangerouslySetInnerHTML={{__html:html}}/>
+              {slug==='index'&&<div className="hero-cta"><button className="primary" onClick={()=>navigate('getting-started')}>Install AxonWeave</button></div>}
+              <CodeEnhancer slug={slug}/>
+              <PageNav slug={slug} navigate={navigate}/>
+            </>
+          )
+      ) : <NotFound navigate={navigate}/>}
     </main>
-    {page&&<aside className="toc"><div className="toc-title">On this page</div><Toc slug={slug}/></aside>}
+    {page&&slug!=='playground'&&<aside className="toc"><div className="toc-title">On this page</div><Toc slug={slug}/></aside>}
    </div>
-   <div className="sidebar-resizer" onMouseDown={e=>{dragRef.current={startX:e.clientX,startW:sidebarWidth};document.body.classList.add('resizing')}} role="separator" aria-orientation="vertical" aria-label="Resize sidebar" tabIndex={0}/>
+   {slug!=='playground'&&<div className="sidebar-resizer" onMouseDown={e=>{dragRef.current={startX:e.clientX,startW:sidebarWidth};document.body.classList.add('resizing')}} role="separator" aria-orientation="vertical" aria-label="Resize sidebar" tabIndex={0}/>}
    <footer><span>AxonWeave · Apache-2.0 software</span><span><a href={hrefFor('privacy')} onClick={e=>{e.preventDefault();navigate('privacy')}}>Privacy</a> · <a href={hrefFor('terms')} onClick={e=>{e.preventDefault();navigate('terms')}}>Terms</a></span></footer>
    <CookieConsent/>
    {searchOpen&&<SearchDialog pages={pages} onClose={()=>setSearchOpen(false)} onGo={navigate}/>}

@@ -14,6 +14,9 @@
     "postbuild": "cp dist/index.html dist/404.html"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.3.7",
+    "@radix-ui/react-slider": "^1.4.7",
+    "@radix-ui/themes": "^3.3.0",
     "@vitejs/plugin-react": "latest",
     "dompurify": "latest",
     "lucide-react": "latest",

@@ -1,5 +1,60 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { FiZap, FiLink, FiActivity, FiAlertTriangle, FiPause, FiPlay, FiRotateCw } from 'react-icons/fi';
+import { FiZap, FiLink, FiActivity, FiAlertTriangle, FiPause, FiPlay, FiRotateCw, FiCopy, FiCheck, FiChevronDown, FiMoon, FiSun, FiGithub } from 'react-icons/fi';
+import * as Slider from '@radix-ui/react-slider';
+import * as Select from '@radix-ui/react-select';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-python';
+
+/* ------------------------------------------------------------------ */
+/*  Reusable Radix-based controls                                      */
+/* ------------------------------------------------------------------ */
+
+function PgSlider({ label, value, min, max, step, onChange, format }: {
+  label: string; value: number; min: number; max: number; step: number;
+  onChange: (v: number) => void; format?: (v: number) => string;
+}) {
+  return (
+    <div className="pg-ctrl">
+      <span className="pg-ctrl-name">{label}</span>
+      <Slider.Root className="pg-slider" value={[value]} min={min} max={max} step={step}
+        onValueChange={([v]) => onChange(v)}>
+        <Slider.Track className="pg-slider-track">
+          <Slider.Range className="pg-slider-range" />
+        </Slider.Track>
+        <Slider.Thumb className="pg-slider-thumb" />
+      </Slider.Root>
+      <span className="pg-ctrl-val">{format ? format(value) : value}</span>
+    </div>
+  );
+}
+
+function PgSelect({ label, value, options, onChange }: {
+  label: string; value: string; options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="pg-ctrl">
+      <span className="pg-ctrl-name">{label}</span>
+      <Select.Root value={value} onValueChange={onChange}>
+        <Select.Trigger className="pg-select-trigger">
+          <Select.Value />
+          <Select.Icon><FiChevronDown size={12} /></Select.Icon>
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Content className="pg-select-content" position="popper" sideOffset={4}>
+            <Select.Viewport className="pg-select-viewport">
+              {options.map(o => (
+                <Select.Item key={o.value} value={o.value} className="pg-select-item">
+                  <Select.ItemText>{o.label}</Select.ItemText>
+                </Select.Item>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Demo simulation — NOT real biological data.                       */
@@ -182,6 +237,13 @@ function getCanvasLogicalSize(canvas: HTMLCanvasElement): { w: number; h: number
   return { w: rect.width, h: rect.height };
 }
 
+// --- Read theme CSS variable from .pg container ---
+function getThemeColor(varName: string): string {
+  const pg = document.querySelector('.pg');
+  if (!pg) return '';
+  return getComputedStyle(pg).getPropertyValue(varName).trim();
+}
+
 // --- Resize canvas to match container (DPR-aware) ---
 function resizeCanvas(canvas: HTMLCanvasElement) {
   const { w, h } = getCanvasLogicalSize(canvas);
@@ -208,8 +270,8 @@ function drawNeuronMap(
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const { w: W, h: H } = getCanvasLogicalSize(canvas);
-  const bg = dark ? '#0d1117' : '#f8f9fa';
-  const textColor = dark ? '#8b949e' : '#5f6b76';
+  const bg = getThemeColor('--bg') || (dark ? '#10151b' : '#f6f7f8');
+  const textColor = getThemeColor('--muted') || (dark ? '#aeb8c2' : '#55616b');
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = bg;
@@ -238,7 +300,7 @@ function drawNeuronMap(
         : `rgba(238,76,44,${alpha})`;
       ctx.lineWidth = 1.5 + (1 - age / 60) * 1.5;
     } else {
-      ctx.strokeStyle = dark ? 'rgba(48,54,61,0.25)' : 'rgba(200,206,212,0.3)';
+      ctx.strokeStyle = (getThemeColor('--line') || (dark ? '#2a343e' : '#d9dfe4')) + '40';
       ctx.lineWidth = 0.5;
     }
     ctx.stroke();
@@ -268,7 +330,7 @@ function drawNeuronMap(
     const r = spiked ? 7 : 5.5;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = spiked ? baseColor : (dark ? '#30363d' : '#d0d7de');
+    ctx.fillStyle = spiked ? baseColor : (getThemeColor('--surface-2') || (dark ? '#1b242d' : '#eef1f3'));
     ctx.fill();
     ctx.strokeStyle = baseColor;
     ctx.lineWidth = spiked ? 2.5 : 1;
@@ -278,7 +340,7 @@ function drawNeuronMap(
     const barW = 3, barH = 18;
     const barX = x + r + 4, barY = y - barH / 2;
     // Track background
-    ctx.fillStyle = dark ? '#161b22' : '#eaecf0';
+    ctx.fillStyle = getThemeColor('--surface') || (dark ? '#151c23' : '#ffffff');
     ctx.fillRect(barX, barY, barW, barH);
     // Fill based on voltage
     const fillH = Math.max(1, barH * vNorm);
@@ -286,7 +348,7 @@ function drawNeuronMap(
     ctx.fillStyle = fillColor;
     ctx.fillRect(barX, barY + barH - fillH, barW, fillH);
     // Border
-    ctx.strokeStyle = dark ? '#30363d' : '#d0d7de';
+    ctx.strokeStyle = getThemeColor('--line') || (dark ? '#2a343e' : '#d9dfe4');
     ctx.lineWidth = 0.5;
     ctx.strokeRect(barX, barY, barW, barH);
 
@@ -327,11 +389,11 @@ function drawRaster(
   if (!ctx) return;
   const { w: W, h: H } = getCanvasLogicalSize(canvas);
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = dark ? '#0d1117' : '#f8f9fa';
+  ctx.fillStyle = getThemeColor('--bg') || (dark ? '#10151b' : '#f6f7f8');
   ctx.fillRect(0, 0, W, H);
 
   // Grid
-  ctx.strokeStyle = dark ? 'rgba(48,54,61,0.35)' : 'rgba(200,206,212,0.4)';
+  ctx.strokeStyle = (getThemeColor('--line') || (dark ? '#2a343e' : '#d9dfe4')) + '55';
   ctx.lineWidth = 0.5;
   for (let i = 0; i <= 4; i++) {
     const y = (H / 4) * i;
@@ -339,8 +401,8 @@ function drawRaster(
   }
 
   // Time axis labels
-  const textColor = dark ? '#8b949e' : '#5f6b76';
-  ctx.fillStyle = textColor;
+  const rtColor = getThemeColor('--muted') || (dark ? '#aeb8c2' : '#55616b');
+  ctx.fillStyle = rtColor;
   ctx.font = '9px monospace';
   ctx.textAlign = 'center';
   const windowMs = 600;
@@ -364,7 +426,7 @@ function drawRaster(
   }
 
   // Y-axis labels
-  ctx.fillStyle = textColor;
+  ctx.fillStyle = rtColor;
   ctx.font = '9px monospace';
   ctx.textAlign = 'left';
   ctx.fillText(`N${nNeurons - 1}`, 2, 14);
@@ -380,11 +442,11 @@ function drawVoltageTrace(
   if (!ctx) return;
   const { w: W, h: H } = getCanvasLogicalSize(canvas);
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = dark ? '#0d1117' : '#f8f9fa';
+  ctx.fillStyle = getThemeColor('--bg') || (dark ? '#10151b' : '#f6f7f8');
   ctx.fillRect(0, 0, W, H);
 
   // Grid
-  ctx.strokeStyle = dark ? 'rgba(48,54,61,0.35)' : 'rgba(200,206,212,0.4)';
+  ctx.strokeStyle = (getThemeColor('--line') || (dark ? '#2a343e' : '#d9dfe4')) + '55';
   ctx.lineWidth = 0.5;
   for (let i = 0; i <= 4; i++) {
     const y = (H / 4) * i;
@@ -415,8 +477,8 @@ function drawVoltageTrace(
   }
 
   // Labels
-  const textColor = dark ? '#8b949e' : '#5f6b76';
-  ctx.fillStyle = textColor;
+  const vtColor = getThemeColor('--muted') || (dark ? '#aeb8c2' : '#55616b');
+  ctx.fillStyle = vtColor;
   ctx.font = '9px monospace';
   ctx.textAlign = 'right';
   ctx.fillText('-35mV', W - 4, 14);
@@ -446,11 +508,11 @@ function drawInputWaveform(
   if (!ctx) return;
   const { w: W, h: H } = getCanvasLogicalSize(canvas);
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = dark ? '#0d1117' : '#f8f9fa';
+  ctx.fillStyle = getThemeColor('--bg') || (dark ? '#10151b' : '#f6f7f8');
   ctx.fillRect(0, 0, W, H);
 
   // Grid
-  ctx.strokeStyle = dark ? 'rgba(48,54,61,0.3)' : 'rgba(200,206,212,0.35)';
+  ctx.strokeStyle = (getThemeColor('--line') || (dark ? '#2a343e' : '#d9dfe4')) + '50';
   ctx.lineWidth = 0.5;
   const midY = H / 2;
   ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(W, midY); ctx.stroke();
@@ -475,8 +537,8 @@ function drawInputWaveform(
   ctx.stroke();
 
   // Labels
-  const textColor = dark ? '#8b949e' : '#5f6b76';
-  ctx.fillStyle = textColor;
+  const iwColor = getThemeColor('--muted') || (dark ? '#aeb8c2' : '#55616b');
+  ctx.fillStyle = iwColor;
   ctx.font = '9px monospace';
   ctx.textAlign = 'left';
   ctx.fillText(mode.toUpperCase(), 4, 14);
@@ -556,6 +618,8 @@ export default function Playground({ dark }: PlaygroundProps) {
   const rasterCanvasRef = useRef<HTMLCanvasElement>(null);
   const voltageCanvasRef = useRef<HTMLCanvasElement>(null);
   const inputCanvasRef = useRef<HTMLCanvasElement>(null);
+  const codeRef = useRef<HTMLElement>(null);
+  const [copied, setCopied] = useState(false);
 
   // Mutable simulation state (refs for performance)
   const netRef = useRef(generateNetwork(nNeurons, density, seed));
@@ -588,26 +652,28 @@ export default function Playground({ dark }: PlaygroundProps) {
   useEffect(() => {
     const canvases = [mapCanvasRef.current, rasterCanvasRef.current, voltageCanvasRef.current, inputCanvasRef.current];
     const resize = () => canvases.forEach(c => { if (c) resizeCanvas(c); });
-    resize();
-    // Initial draw
-    if (mapCanvasRef.current) {
-      resizeCanvas(mapCanvasRef.current);
-      drawNeuronMap(mapCanvasRef.current, netRef.current.neurons, netRef.current.synapses, 0, dark);
-    }
-    if (rasterCanvasRef.current) {
-      resizeCanvas(rasterCanvasRef.current);
-      drawRaster(rasterCanvasRef.current, [], 0, nNeurons, dark);
-    }
-    if (voltageCanvasRef.current) {
-      resizeCanvas(voltageCanvasRef.current);
-      drawVoltageTrace(voltageCanvasRef.current, netRef.current.neurons.slice(0, 5).map(n => [n.v]), dark);
-    }
-    if (inputCanvasRef.current) {
-      resizeCanvas(inputCanvasRef.current);
-      drawInputWaveform(inputCanvasRef.current, mode, freq, amplitude, 0, dark);
-    }
+    const drawAll = () => {
+      if (mapCanvasRef.current) {
+        resizeCanvas(mapCanvasRef.current);
+        drawNeuronMap(mapCanvasRef.current, netRef.current.neurons, netRef.current.synapses, 0, dark);
+      }
+      if (rasterCanvasRef.current) {
+        resizeCanvas(rasterCanvasRef.current);
+        drawRaster(rasterCanvasRef.current, [], 0, nNeurons, dark);
+      }
+      if (voltageCanvasRef.current) {
+        resizeCanvas(voltageCanvasRef.current);
+        drawVoltageTrace(voltageCanvasRef.current, netRef.current.neurons.slice(0, 5).map(n => [n.v]), dark);
+      }
+      if (inputCanvasRef.current) {
+        resizeCanvas(inputCanvasRef.current);
+        drawInputWaveform(inputCanvasRef.current, mode, freq, amplitude, 0, dark);
+      }
+    };
+    // Draw after layout settles (double rAF to ensure flex layout is complete)
+    requestAnimationFrame(() => requestAnimationFrame(drawAll));
 
-    const ro = new ResizeObserver(resize);
+    const ro = new ResizeObserver(() => { resize(); drawAll(); });
     canvases.forEach(c => { if (c?.parentElement) ro.observe(c.parentElement); });
     return () => ro.disconnect();
   }, [dark, nNeurons, mode, freq, amplitude]);
@@ -700,6 +766,19 @@ export default function Playground({ dark }: PlaygroundProps) {
     width: '100%', height: '100%', display: 'block' as const,
   }), []);
 
+  const copyCode = useCallback(async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [code]);
+
+  // Highlight code block
+  useEffect(() => {
+    if (codeRef.current) {
+      Prism.highlightElement(codeRef.current);
+    }
+  }, [code]);
+
   // Presets: pre-built demo scenarios
   const presets: Record<string, { n: number; d: number; s: number; m: string; f: number; a: number; t: number; label: string; desc: string }> = {
     default: { n: 24, d: 0.15, s: 42, m: 'sine', f: 3, a: 1.0, t: 15, label: 'Default', desc: 'Balanced network with sine input' },
@@ -725,184 +804,109 @@ export default function Playground({ dark }: PlaygroundProps) {
   };
 
   return (
-    <div className="playground-wrapper">
-      {/* Banner */}
-      <div className="playground-banner">
-        <span className="playground-badge">DEMO</span>
-        <span>This is a simplified simulation for exploration. It uses random weights and a toy graph — not the real MaleCNS connectome.</span>
-      </div>
-
-      {/* Presets */}
-      <div className="playground-presets">
-        <span className="presets-label">Quick demos</span>
-        <div className="presets-row">
-          {Object.entries(presets).map(([key, p]) => (
-            <button key={key} className={`preset-btn ${preset === key ? 'active' : ''}`}
-              onClick={() => applyPreset(key)} title={p.desc}>
-              {p.label}
-            </button>
-          ))}
+    <div className="pg">
+            {/* Top control bar */}
+      <div className="pg-topbar">
+        <div className="pg-topbar-left">
+          <span className="pg-logo"><FiZap size={16}/> AxonWeave Playground</span>
+        </div>
+        <div className="pg-topbar-center">
+          <div className="pg-presets-row">
+            {Object.entries(presets).map(([key, p]) => (
+              <button key={key} className={`pg-preset ${preset === key ? 'active' : ''}`}
+                onClick={() => applyPreset(key)} title={p.desc}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="pg-topbar-right">
+          <button className="pg-reset-btn" onClick={() => { setRunning(false); rebuild(); }} title="Reset"><FiRotateCw size={14}/></button>
+          <button className={`pg-run-btn ${running ? 'running' : ''}`}
+            onClick={() => setRunning(!running)}>{running ? <><FiPause size={14}/> Pause</> : <><FiPlay size={14}/> Run</>}</button>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="playground-controls">
-        <div className="control-group">
-          <label className="control-label">Network</label>
-          <div className="control-row">
-            <span className="control-name">Neurons</span>
-            <input type="range" min="8" max="40" step="1" value={nNeurons}
-              onChange={e => setNNeurons(Number(e.target.value))} />
-            <span className="control-value">{nNeurons}</span>
+      {/* 3-column body */}
+      <div className="pg-body">
+        {/* LEFT: Controls */}
+        <div className="pg-left">
+          <div className="pg-col-header">Parameters</div>
+          <div className="pg-ctrl-group">
+            <label className="pg-ctrl-label">Network</label>
+            <PgSlider label="Neurons" value={nNeurons} min={8} max={40} step={1} onChange={setNNeurons} />
+            <PgSlider label="Density" value={density} min={0.05} max={0.35} step={0.01} onChange={setDensity} format={v => v.toFixed(2)} />
+            <PgSlider label="Seed" value={seed} min={1} max={100} step={1} onChange={setSeed} />
           </div>
-          <div className="control-row">
-            <span className="control-name">Density</span>
-            <input type="range" min="0.05" max="0.35" step="0.01" value={density}
-              onChange={e => setDensity(Number(e.target.value))} />
-            <span className="control-value">{density.toFixed(2)}</span>
+          <div className="pg-ctrl-group">
+            <label className="pg-ctrl-label">Dynamics</label>
+            <PgSlider label="tau_m" value={tauM * 1000} min={5} max={30} step={1} onChange={v => setTauM(v / 1000)} format={v => `${v.toFixed(0)}ms`} />
           </div>
-          <div className="control-row">
-            <span className="control-name">Seed</span>
-            <input type="range" min="1" max="100" step="1" value={seed}
-              onChange={e => setSeed(Number(e.target.value))} />
-            <span className="control-value">{seed}</span>
+          <div className="pg-ctrl-group">
+            <label className="pg-ctrl-label">Input Signal</label>
+            <PgSelect label="Mode" value={mode} onChange={setMode} options={[
+              { value: 'sine', label: 'Sine' },
+              { value: 'pulse', label: 'Pulse' },
+              { value: 'burst', label: 'Burst' },
+              { value: 'ramp', label: 'Ramp' },
+            ]} />
+            <PgSlider label="Freq" value={freq} min={0.5} max={10} step={0.5} onChange={setFreq} format={v => `${v} Hz`} />
+            <PgSlider label="Amplitude" value={amplitude} min={0.1} max={3} step={0.1} onChange={setAmplitude} format={v => v.toFixed(1)} />
           </div>
-        </div>
-
-        <div className="control-group">
-          <label className="control-label">Dynamics</label>
-          <div className="control-row">
-            <span className="control-name">τ_m (ms)</span>
-            <input type="range" min="5" max="30" step="1" value={tauM * 1000}
-              onChange={e => setTauM(Number(e.target.value) / 1000)} />
-            <span className="control-value">{(tauM * 1000).toFixed(0)}</span>
+          <div className="pg-ctrl-group">
+            <label className="pg-ctrl-label">Playback</label>
+            <PgSlider label="Speed" value={speed} min={0.2} max={4} step={0.2} onChange={setSpeed} format={v => `${v.toFixed(1)}x`} />
           </div>
         </div>
 
-        <div className="control-group">
-          <label className="control-label">Input Signal</label>
-          <div className="control-row">
-            <span className="control-name">Mode</span>
-            <select value={mode} onChange={e => setMode(e.target.value)}>
-              <option value="sine">Sine wave</option>
-              <option value="pulse">Pulse train</option>
-              <option value="burst">Burst</option>
-              <option value="ramp">Ramp</option>
-            </select>
-          </div>
-          <div className="control-row">
-            <span className="control-name">Freq (Hz)</span>
-            <input type="range" min="0.5" max="10" step="0.5" value={freq}
-              onChange={e => setFreq(Number(e.target.value))} />
-            <span className="control-value">{freq}</span>
-          </div>
-          <div className="control-row">
-            <span className="control-name">Amplitude</span>
-            <input type="range" min="0.1" max="3" step="0.1" value={amplitude}
-              onChange={e => setAmplitude(Number(e.target.value))} />
-            <span className="control-value">{amplitude.toFixed(1)}</span>
-          </div>
-        </div>
-
-        <div className="control-group">
-          <label className="control-label">Playback</label>
-          <div className="control-row">
-            <span className="control-name">Speed</span>
-            <input type="range" min="0.2" max="4" step="0.2" value={speed}
-              onChange={e => setSpeed(Number(e.target.value))} />
-            <span className="control-value">{speed.toFixed(1)}x</span>
-          </div>
-          <div className="control-row control-buttons">
-            <button className={`play-btn ${running ? 'running' : ''}`}
-              onClick={() => setRunning(!running)}>{running ? <><FiPause size={14}/> Pause</> : <><FiPlay size={14}/> Run</>}</button>
-            <button className="reset-btn" onClick={() => { setRunning(false); rebuild(); }}><><FiRotateCw size={14}/> Reset</></button>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="playground-stats">
-        <div className="stat">
-          <span className="stat-label">Time</span>
-          <span className="stat-value">{(tick / 1000).toFixed(2)}s</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Spikes</span>
-          <span className="stat-value">{spikeCount}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Firing Rate</span>
-          <span className="stat-value">{firingRate} Hz</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Active</span>
-          <span className="stat-value">{activeNeurons}/{nNeurons}</span>
-        </div>
-      </div>
-
-      {/* Visualization */}
-      <div className="playground-viz">
-        <div className="viz-panel neuron-map">
-          <div className="viz-title">Neuron Map — neurons glow when spiking, potential bars show membrane voltage, synapses flash on activation</div>
-          <div className="canvas-container">
-            <canvas ref={mapCanvasRef} style={canvasStyle} />
-          </div>
-        </div>
-        <div className="viz-side">
-          <div className="viz-panel raster-panel">
-            <div className="viz-title">Spike Raster (last 600ms)</div>
-            <div className="canvas-container">
-              <canvas ref={rasterCanvasRef} style={canvasStyle} />
+        {/* CENTER: Visualization */}
+        <div className="pg-center">
+          <div className="pg-viz-main">
+            <div className="pg-panel">
+              <div className="pg-panel-title">Neuron Map</div>
+              <div className="pg-canvas-wrap"><canvas ref={mapCanvasRef} style={canvasStyle}/></div>
             </div>
           </div>
-          <div className="viz-panel voltage-panel">
-            <div className="viz-title">Membrane Traces (5 neurons)</div>
-            <div className="canvas-container">
-              <canvas ref={voltageCanvasRef} style={canvasStyle} />
-            </div>
+          <div className="pg-viz-row">
+            <div className="pg-panel"><div className="pg-panel-title">Spike Raster</div><div className="pg-canvas-wrap"><canvas ref={rasterCanvasRef} style={canvasStyle}/></div></div>
+            <div className="pg-panel"><div className="pg-panel-title">Membrane Traces</div><div className="pg-canvas-wrap"><canvas ref={voltageCanvasRef} style={canvasStyle}/></div></div>
+            <div className="pg-panel"><div className="pg-panel-title">Input Waveform</div><div className="pg-canvas-wrap"><canvas ref={inputCanvasRef} style={canvasStyle}/></div></div>
           </div>
-          <div className="viz-panel input-panel">
-            <div className="viz-title">Input Waveform to N0-N3</div>
-            <div className="canvas-container">
-              <canvas ref={inputCanvasRef} style={canvasStyle} />
+        </div>
+
+        {/* RIGHT: Stats + Code */}
+        <div className="pg-right">
+          <div className="pg-stats-grid">
+            <div className="pg-stat"><span className="pg-stat-label">Time</span><span className="pg-stat-value">{(tick / 1000).toFixed(2)}s</span></div>
+            <div className="pg-stat"><span className="pg-stat-label">Spikes</span><span className="pg-stat-value">{spikeCount}</span></div>
+            <div className="pg-stat"><span className="pg-stat-label">Rate</span><span className="pg-stat-value">{firingRate} Hz</span></div>
+            <div className="pg-stat"><span className="pg-stat-label">Active</span><span className="pg-stat-value">{activeNeurons}/{nNeurons}</span></div>
+          </div>
+          <div className="pg-code-panel">
+            <div className="pg-code-header">
+              <span>AxonWeave Code</span>
+              <div className="pg-code-actions">
+                <span className="pg-lang-chip">python</span>
+                <button className="pg-copy-btn" onClick={copyCode} aria-label="Copy code">
+                  {copied ? <><FiCheck size={12}/> Copied</> : <><FiCopy size={12}/> Copy</>}
+                </button>
+              </div>
+            </div>
+            <div className="pg-code-body">
+              <pre><code ref={codeRef} className="language-python">{code}</code></pre>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Code panel */}
-      <div className="playground-code">
-        <div className="code-panel-header">
-          <span className="code-panel-title">Equivalent AxonWeave Code</span>
-          <span className="code-panel-note">This code shows the real API — the simulation above is a browser-side approximation.</span>
-        </div>
-        <pre><code>{code}</code></pre>
-      </div>
-
-      {/* How it works */}
-      <div className="playground-explain">
-        <h3>How this simulation works</h3>
-        <div className="explain-grid">
-          <div className="explain-card">
-            <div className="explain-icon"><FiZap size={24}/></div>
-            <h4>LIF Neuron Model</h4>
-            <p>Each neuron integrates input current into a membrane potential <code>V</code>. When <code>V</code> exceeds the threshold, it fires a spike and resets. The time constant <code>τ_m</code> controls how fast the membrane leaks back toward rest.</p>
-          </div>
-          <div className="explain-card">
-            <div className="explain-icon"><FiLink size={24}/></div>
-            <h4>Synaptic Propagation</h4>
-            <p>When a neuron spikes, its signal propagates through weighted synapses (excitatory <span style={{color:'#4d8fd6'}}>blue</span> / inhibitory <span style={{color:'#ee4c2c'}}>red</span>). Connected neurons receive the weight as a voltage bump on the next timestep.</p>
-          </div>
-          <div className="explain-card">
-            <div className="explain-icon"><FiActivity size={24}/></div>
-            <h4>Neuron Regions</h4>
-            <p>Neurons are assigned to brain regions (Visual, Motor, Association, Sensory). In the real AxonWeave, these come from MaleCNS cell-type annotations — not random assignment.</p>
-          </div>
-          <div className="explain-card">
-            <div className="explain-icon"><FiAlertTriangle size={24}/></div>
-            <h4>This is a Demo</h4>
-            <p>The real MaleCNS connectome has <strong>166,700 neurons</strong> and millions of synapses. This browser demo uses {nNeurons} neurons with random topology. For real substrate access, install AxonWeave.</p>
-          </div>
+      {/* Bottom: Explanation */}
+      <div className="pg-explain">
+        <h3>How this works</h3>
+        <div className="pg-explain-grid">
+          <div className="pg-explain-card"><FiZap size={18}/><h4>LIF Neuron</h4><p>Membrane integrates current, fires on threshold, resets. tau_m controls leak rate.</p></div>
+          <div className="pg-explain-card"><FiLink size={18}/><h4>Synapses</h4><p>Spikes propagate via weighted synapses. Excitatory (blue) / inhibitory (red).</p></div>
+          <div className="pg-explain-card"><FiActivity size={18}/><h4>Regions</h4><p>Visual, Motor, Association, Sensory. Real MaleCNS uses cell-type annotations.</p></div>
+          <div className="pg-explain-card"><FiAlertTriangle size={18}/><h4>Demo Only</h4><p>Real MaleCNS: 166,700 neurons. This uses {nNeurons} random ones.</p></div>
         </div>
       </div>
     </div>
