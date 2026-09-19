@@ -2,6 +2,8 @@ name: CI
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
   python:
     strategy:
@@ -28,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: {extra: [torch, tensorflow]}
+      matrix: {extra: [torch, tensorflow, jax]}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

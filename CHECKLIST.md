@@ -87,11 +87,14 @@ Status legend:
 ### CI/CD
 - [x] Python 3.10–3.14 CI matrix definition.
 - [x] Ubuntu/macOS/Windows CI matrix definition.
-- [x] Backend smoke jobs (torch, tensorflow) running the full test suite.
+- [x] Backend smoke jobs (torch, tensorflow, jax) running the full test suite (`tests/test_jax.py` + jax lane in `test_cross_backend.py`).
 - [x] Wheel build + wheel import smoke test in CI.
 - [x] Source-distribution build check.
 - [x] Rust/PyO3 CI.
 - [x] Native-equivalence CI lane (build wheel → run `test_native_runtime.py` → full fallback suite against the wheel).
+- [x] Least-privilege workflow-level `permissions: contents: read` on `ci.yml` + `rust.yml` (CodeQL-aligned; CodeQL autofix covered `rust.yml`, `ci.yml` aligned for uniform token scope).
+- [x] Rust native-runner fixes: `csr_matmul_2d_transpose` E0425 (`_n_cols` → `n_cols` in `rust/src/graph.rs`); test-lane wheel builds switch to `manylinux: off` (manylinux2014 Docker image has no `python3` on PATH — fixes "Couldn't find any python interpreters from 'python3'"); release wheels in `build-wheels.yml` keep `manylinux: auto`.
+- [x] Docs sitemap covers every route — `runtime` + `playground` URLs added to `docs-site/public/sitemap.xml` (source of the `sitemap missing: ['runtime', 'playground']` failure).
 - [x] Benchmark suite (`benchmarks/bench_graph_build.py`): in-memory vs disk-backed graph build (wall time, Python allocation peak, peak RSS), fingerprint-equality tripwire, JSONL history via `--jsonl`; 7 tests in `tests/test_bench_graph_build.py`.
 - [x] Docs CI: typecheck → design-token lint → build → artifact verification.
 - [x] Single consolidated GitHub Pages deploy workflow with `configure-pages(enablement: true)`.
@@ -113,7 +116,7 @@ the authoritative validation environment:
 - [ ] Torch high-level API: `BrainModel`, `ConnectomeBlock` fit/composition/training-mode tests (`tests/test_torch_brain_model.py`).
 - [ ] `brain.task` happy path and `brain.layer` alias (torch-dependent).
 - [ ] Keras high-level adapter: `BrainLayer`, `KerasConnectomeBlock`, `brain.keras_task(...)` with 13 authored tests (`tests/test_keras_brain_layer.py`, tensorflow-dependent).
-- [ ] JAX adapter (`axonweave.jax`): `ConnectomeLayer`, `BrainModel`, `ConnectomeBlock`, `Input`, `Readout` — written, no local JAX installation to test; numerical/device CI verification pending.
+- [ ] JAX adapter (`axonweave.jax`): `ConnectomeLayer`, `BrainModel`, `ConnectomeBlock`, `Input`, `Readout`, `resolve_dynamics` — parity fix (propagates `x @ W` like numpy/torch/keras; BCOO via `bcoo_from_scipy_sparse` with jax<0.4.37 fallback; AXW006 preserved on import failure); 22 tests authored (`tests/test_jax.py`) + `test_jax_equals_numpy` in the cross-backend suite; CPU-forced for deterministic CI; numerical/device CI verification pending.
 - [ ] Rust/PyO3 build and tests on CI runners.
 - [ ] Wheel builds across the OS × Python matrix.
 - [x] GitHub Pages deployment job (`docs.yml` builds the docs site with the `VITE_BASE_PATH=/axonweave/` base on Node 24 LTS and force-pushes the result to the `gh-pages` branch on push to `main`).

@@ -117,7 +117,7 @@ pub fn csr_matmul_2d_transpose<'py>(
     indptr: Bound<'py, PyArray1<i64>>,
     x: Bound<'py, PyArray2<f32>>,
     n_rows: usize,
-    _n_cols: usize,
+    n_cols: usize,
 ) -> PyResult<Bound<'py, PyArray1<f32>>> {
     let data_ro = data.readonly();
     let indices_ro = indices.readonly();

@@ -1,15 +1,26 @@
 from __future__ import annotations
 
+from ..errors import BackendUnavailableError
+
 try:
     import jax
     import jax.numpy as jnp
-    from jax.experimental.sparse import BCOO
-except ImportError as e:
-    from ..errors import BackendUnavailableError
+    from jax.experimental.sparse import BCOO, bcoo_from_scipy_sparse, bcoo_sum_duplicates
+except ImportError:
+    # jax < 0.4.37: only the BCOO.from_scipy_sparse classmethod exists.
+    try:
+        import jax
+        import jax.numpy as jnp
+        from jax.experimental.sparse import BCOO
 
-    raise BackendUnavailableError(
-        "AXW006: axonweave.jax requires JAX; install axonweave[jax]"
-    ) from e
+        bcoo_from_scipy_sparse = BCOO.from_scipy_sparse
+
+        def bcoo_sum_duplicates(m):
+            return m.sum_duplicates(remove_zeros=False)
+    except ImportError as e:
+        raise BackendUnavailableError(
+            "AXW006: axonweave.jax requires JAX; install axonweave[jax]"
+        ) from e
 
 from ..core.selection import NeuronSelection
 from ..errors import ApiUsageError, UnsupportedDeviceError
@@ -34,7 +45,7 @@ class ConnectomeLayer:
     """Sparse biological connectome as a JAX module (experimental).
 
     Propagates batched neuron activity through the substrate's CSR topology
-    via a JAX ``BCOO`` sparse matrix: ``y = (x @ W^T) * gain + bias`` with W's
+    via a JAX ``BCOO`` sparse matrix: ``y = (x @ W) * gain + bias`` with W's
     sparsity pattern fixed to the connectome (trainable edges change values,
     never the topology — JAX transformations such as ``jax.grad`` apply to
     ``edge_weight`` through functional updates, not in-place mutation).
@@ -89,8 +100,8 @@ class ConnectomeLayer:
         self.n_neurons = sub.shape[0]
         self.graph_weights = sub
         self.device = _resolve_device(device)
-        w = BCOO.from_scipy_sparse(sub)
-        w = w.sum_duplicates(remove_zeros=False)
+        w = bcoo_from_scipy_sparse(sub)
+        w = bcoo_sum_duplicates(w)
         self._indices_sorted = w.indices_sorted
         self._unique_indices = w.unique_indices
         self.indices = jax.device_put(w.indices, self.device)
@@ -134,7 +145,7 @@ class ConnectomeLayer:
             indices_sorted=self._indices_sorted,
             unique_indices=self._unique_indices,
         )
-        y = (w @ xf.T).T
+        y = xf @ w
         y = y * self.gain
         if self.bias is not None:
             y = y + self.bias

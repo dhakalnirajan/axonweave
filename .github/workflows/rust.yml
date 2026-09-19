@@ -15,7 +15,7 @@ jobs:
         with:
           command: build
           args: --release --out dist
-          manylinux: auto
+          manylinux: off
 
   native-equivalence:
     name: native vs numpy equivalence
@@ -31,7 +31,7 @@ jobs:
         with:
           command: build
           args: --release --out dist
-          manylinux: auto
+          manylinux: off
       - name: Install wheel and test deps
         shell: bash
         run: |

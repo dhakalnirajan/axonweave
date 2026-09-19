@@ -43,7 +43,7 @@ what is written vs CI-verified), `[ ]` not started.
 - [x] PyTorch.
 - [x] TensorFlow/Keras.
 - [x] NumPy/SciPy.
-- [~] JAX adapter (`axonweave.jax` written: layer + high-level block; numerical/device CI verification pending).
+- [~] JAX adapter (`axonweave.jax` layer + high-level block + `tests/test_jax.py` authored; parity fix `x @ W`; numerical/device CI verification pending).
 - [x] Cross-backend numerical equivalence tests (NumPy = PyTorch = Keras).
 - [ ] PyTorch CUDA/MPS/XPU test lanes where runners are available.
 - [ ] TensorFlow GPU/TPU test lanes where runners are available.
@@ -93,8 +93,8 @@ low-level APIs remain unchanged.
 - [x] `brain.capabilities()` backend/device reporting.
 - [x] Checkpoint substrate-fingerprint validation (refuse mismatched graphs, AXW002).
 - [x] First-class `axonweave.readout` package: `ClassificationReadout`, `RegressionReadout`, `TokenReadout`, `ActionReadout` (explicit `n_source` guards, reference SGD `update()`, top-level re-exports).
-- [ ] Keras high-level adapter (`axonweave.keras.BrainLayer`).
-- [ ] JAX high-level adapter.
+- [~] Keras high-level adapter (`axonweave.keras.BrainLayer`, written + tests; CI-verified pending).
+- [~] JAX high-level adapter (written + tests; CI-verified pending).
 - [x] Surrogate-gradient training through spiking dynamics.
 
 ## Phase 4 detail — Rust streaming graph builder roadmap
