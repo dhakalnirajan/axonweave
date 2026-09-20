@@ -1,50 +1,51 @@
-<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://dhakalnirajan.github.io/axonweave/</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/installation</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/getting-started</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/distribution</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/core-concepts</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/brain</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/connectome</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/dynamics</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/runtime</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/signals</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/encoders</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/readouts</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/tasks</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/training</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/learning</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/experiment</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/checkpoints</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/examples-pytorch-composition</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/examples-selection</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/examples-custom-policy</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/framework</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/backends</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/devices</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/configuration</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/api-reference</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/biology</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/scientific-reference</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/limitations</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/interoperability</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/architecture</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/rust-core</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/release-engineering</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/contributing</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/faq</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/privacy</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/terms</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/license</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/code-of-conduct</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/security</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/errors</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/cli-examples</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/glossary</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/tutorial-lif</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/tutorial-connectome</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/migration-guide</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/benchmarks</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/troubleshooting</loc></url>
-<url><loc>https://dhakalnirajan.github.io/axonweave/playground</loc></url>
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://dhakalnirajan.github.io/axonweave/</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/installation</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/getting-started</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/distribution</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/core-concepts</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/brain</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/connectome</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/dynamics</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/runtime</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/signals</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/encoders</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/readouts</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/tasks</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/training</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/learning</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/experiment</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/checkpoints</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/examples-pytorch-composition</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/examples-selection</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/tutorial-lif</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/tutorial-connectome</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/examples-custom-policy</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/framework</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/backends</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/devices</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/configuration</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/api-reference</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/biology</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/scientific-reference</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/limitations</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/interoperability</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/architecture</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/rust-core</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/release-engineering</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/contributing</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/faq</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/privacy</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/terms</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/license</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/code-of-conduct</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/security</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/errors</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/cli-examples</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/glossary</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/migration-guide</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/benchmarks</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/troubleshooting</loc></url>
+  <url><loc>https://dhakalnirajan.github.io/axonweave/playground</loc></url>
 </urlset>
