@@ -61,6 +61,7 @@ import playgroundMd from '../content/playground.md?raw';
 import glossaryMd from '../content/glossary.md?raw';
 import cliExamplesMd from '../content/cli-examples.md?raw';
 import migrationGuideMd from '../content/migration-guide.md?raw';
+import benchmarksMd from '../content/benchmarks.md?raw';
 import Playground from './components/playground/Playground';
 
 type Page = { slug: string; label: string; source: string; section: string };
@@ -110,6 +111,7 @@ const pages: Page[] = [
  {slug:'cli-examples',label:'CLI Examples',source:cliExamplesMd,section:'Reference'},
  {slug:'glossary',label:'Glossary',source:glossaryMd,section:'Reference'},
  {slug:'migration-guide',label:'Migration Guide',source:migrationGuideMd,section:'Development'},
+ {slug:'benchmarks',label:'Benchmarks',source:benchmarksMd,section:'Development'},
  {slug:'troubleshooting',label:'Troubleshooting',source:troubleshootingMd,section:'Project'},
  {slug:'playground',label:'Playground',source:playgroundMd,section:'Tools'},
  ];

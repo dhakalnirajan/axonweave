@@ -457,7 +457,7 @@ Detailed status of every item in PLAN.md. Verbose, concrete, actionable.
 
 - [x] Status definitions page (Stable/Experimental/Planned/Deprecated).
 - [ ] Content consolidation: merge redundant installation guides.
-- [~] Add Changelog, Migration Guide, Benchmarks, Glossary pages. (Glossary and Migration Guide added; Changelog maintained; Benchmarks still pending.)
+- [x] Add Changelog, Migration Guide, Benchmarks, Glossary pages. (All four present: Changelog, `docs/benchmarks.md` graph-build benchmark documentation, Migration Guide, Glossary.)
 - [ ] Stub cleanup: flesh out or remove stub files.
 - [ ] Playground docs expanded with LIF equations, graph model details, accessibility text.
 
