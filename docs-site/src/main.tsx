@@ -9,7 +9,9 @@ import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-toml';
 import 'prismjs/components/prism-powershell';
 import { FiMenu, FiMoon, FiSun, FiSearch, FiX, FiChevronRight, FiThumbsUp, FiThumbsDown, FiChevronDown, FiZap, FiGithub } from 'react-icons/fi';
-import './style.css';
+import './global.css';
+import './docs.css';
+import './playground.css';
 
 import indexMd from '../content/index.md?raw';
 import gettingStartedMd from '../content/getting-started.md?raw';
@@ -53,7 +55,7 @@ import readoutsMd from '../content/readouts.md?raw';
 import rustCoreMd from '../content/rust-core.md?raw';
 import runtimeMd from '../content/runtime.md?raw';
 import playgroundMd from '../content/playground.md?raw';
-import Playground from './Playground';
+import Playground from './components/playground/Playground';
 
 type Page = { slug: string; label: string; source: string; section: string };
 const pages: Page[] = [

@@ -11,7 +11,7 @@
     "design:lint": "designmd lint DESIGN.md",
     "verify:render": "node scripts/verify-render.mjs",
     "check": "tsc -b && vite build",
-    "postbuild": "cp dist/index.html dist/404.html"
+    "postbuild": "node -e \"const fs=require('fs');fs.copyFileSync('dist/index.html','dist/404.html')\""
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.3.7",

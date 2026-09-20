@@ -1,0 +1,112 @@
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+}
+
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 99;
+  background: var(--surface);
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+}
+
+a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code {
+  font-family: var(--font-code);
+  font-size: 13px;
+}
+
+pre {
+  margin: 0;
+  padding: 18px;
+  background: var(--code);
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius-lg);
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+th {
+  background: var(--surface);
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: var(--bg);
+}
+
+blockquote {
+  margin: 0;
+  padding: 15px 18px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 24px 0;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-primary);
+}

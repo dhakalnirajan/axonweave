@@ -8,7 +8,7 @@ Status legend:
   "Written" is not "verified".
 - **NOT STARTED** — see PLAN.md for ordering.
 
-## COMPLETED
+## COMPLETED  
 
 ### Baseline
 - [x] Complete repository README.
