@@ -24,7 +24,7 @@ Last updated: 2026-09-15 (Temporal Runtime Alpha milestone).
 | Disk-backed streaming builder | yes | pending | schema fixture validation required |
 | Graph fingerprint + manifest validation (AXW002) | yes | pending | pending |
 | Declared upstream fingerprint slot | yes (None until measured) | n/a | blocked on upstream measurement |
-| `.awb` pack/unpack/verify CLI | yes | pending | pending |
+| Versioned `.awb` artifact format (pack/verify/install-file/inspect CLI) | yes | pending | fingerprint-determinism tested |
 | Neuron metadata store + selection tables | yes | pending | annotation column fixtures required |
 
 ## Core model

@@ -114,7 +114,7 @@ def test_verify_unmatched_graph_counts_fail(tmp_path):
         main(["substrate", "--root", str(tmp_path), "verify", "male-cns:v1.0"])
 
 
-def test_pack_unpack_round_trip(tmp_path, capsys):
+def test_pack_install_file_round_trip(tmp_path, capsys):
     target = _fake_substrate(tmp_path)
     archive = tmp_path / "bundle.awb"
     assert main(["substrate", "--root", str(tmp_path), "pack", "male-cns:v1.0",
@@ -122,10 +122,52 @@ def test_pack_unpack_round_trip(tmp_path, capsys):
     assert archive.exists()
     assert "Packed" in capsys.readouterr().out
     assert main(["substrate", "--root", str(tmp_path), "remove", "male-cns:v1.0"]) == 0
-    assert main(["substrate", "--root", str(tmp_path), "unpack", str(archive)]) == 0
+    assert main(["substrate", "--root", str(tmp_path), "install-file", str(archive)]) == 0
+    out = capsys.readouterr().out
+    assert "Installed male-cns:v1.0" in out
     assert target.exists()
     assert (target / "graph.npz").exists()
     assert main(["substrate", "--root", str(tmp_path), "verify", "male-cns:v1.0"]) == 0
+
+
+def test_inspect_awb_reports_manifest(tmp_path, capsys):
+    _fake_substrate(tmp_path)
+    archive = tmp_path / "bundle.awb"
+    assert main(["substrate", "--root", str(tmp_path), "pack", "male-cns:v1.0",
+                 "--output", str(archive)]) == 0
+    capsys.readouterr()
+    assert main(["substrate", "--root", str(tmp_path), "inspect", str(archive)]) == 0
+    out = capsys.readouterr().out
+    assert "male-cns:v1.0" in out
+    assert "awb/1.0" in out
+    assert "Fingerprint:" in out
+
+
+def test_verify_awb_artifact_path(tmp_path, capsys):
+    _fake_substrate(tmp_path)
+    archive = tmp_path / "bundle.awb"
+    assert main(["substrate", "--root", str(tmp_path), "pack", "male-cns:v1.0",
+                 "--output", str(archive)]) == 0
+    capsys.readouterr()
+    assert main(["substrate", "--root", str(tmp_path), "verify", str(archive)]) == 0
+    out = capsys.readouterr().out
+    assert "verified" in out
+    assert "male-cns:v1.0" in out
+
+
+def test_verify_awb_tampered_artifact_fails(tmp_path):
+    _fake_substrate(tmp_path)
+    archive = tmp_path / "bundle.awb"
+    assert main(["substrate", "--root", str(tmp_path), "pack", "male-cns:v1.0",
+                 "--output", str(archive)]) == 0
+    with zipfile.ZipFile(archive) as zf:
+        members = {i.filename: zf.read(i.filename) for i in zf.infolist()}
+    members["graph.npz"] = b"garbage"
+    with zipfile.ZipFile(archive, "w") as zf:
+        for name, payload in members.items():
+            zf.writestr(name, payload)
+    # CLI returns exit code 1 for AxonWeaveError (not SystemExit).
+    assert main(["substrate", "--root", str(tmp_path), "verify", str(archive)]) == 1
 
 
 def test_pack_default_output_name(tmp_path, monkeypatch):
@@ -141,21 +183,21 @@ def test_pack_missing_substrate_fails(tmp_path):
               "--output", str(tmp_path / "x.awb")])
 
 
-def test_unpack_rejects_zip_slip(tmp_path):
+def test_install_file_rejects_zip_slip(tmp_path):
     archive = tmp_path / "evil.awb"
     with zipfile.ZipFile(archive, "w") as zf:
         zf.writestr("manifest.json", json.dumps({
-            "id": "male-cns:v1.0", "status": "installed", "version": "v1.0",
+            "format": "axonweave-substrate", "schema_version": "1.0",
+            "substrate_id": "male-cns:v1.0", "substrate_version": "v1.0",
+            "graph": {},
         }))
         zf.writestr("../evil.txt", b"pwned")
-    with pytest.raises(SystemExit, match="AXW002"):
-        main(["substrate", "--root", str(tmp_path), "unpack", str(archive)])
+    assert main(["substrate", "--root", str(tmp_path), "install-file", str(archive)]) == 1
     assert not (tmp_path.parent / "evil.txt").exists()
 
 
-def test_unpack_rejects_non_bundle(tmp_path):
+def test_install_file_rejects_non_bundle(tmp_path):
     archive = tmp_path / "not-a-bundle.awb"
     with zipfile.ZipFile(archive, "w") as zf:
         zf.writestr("readme.txt", b"hi")
-    with pytest.raises(SystemExit, match="AXW002"):
-        main(["substrate", "--root", str(tmp_path), "unpack", str(archive)])
+    assert main(["substrate", "--root", str(tmp_path), "install-file", str(archive)]) == 1

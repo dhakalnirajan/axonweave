@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 default = []
 
 [dependencies]
-pyo3 = { version = "0.22", features = ["extension-module"] }
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py310"] }
 numpy = "0.22"
 sha2 = "0.10"
 md-5 = "0.10"

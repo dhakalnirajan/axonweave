@@ -24,6 +24,11 @@ AxonWeaveError                     # AXW000 — base class
 └── BackendUnavailableError        # AXW006
 ```
 
+Warnings follow the same code convention (`AxonWeaveWarning` base, `AXW007`+
+slots): `ConfigurationWarning` (AXW007) announces non-fatal configuration
+issues such as `.awb` schema migrations; `AnnotationBuildWarning` (AXW008)
+is raised during substrate installs when selection tables cannot be built.
+
 Some API-misuse paths (wrong dimensions, unknown option names) raise `ValueError` with an `AXW010`-prefixed message rather than a dedicated class — see the code table below.
 
 ## Error code reference
@@ -31,12 +36,14 @@ Some API-misuse paths (wrong dimensions, unknown option names) raise `ValueError
 | Code | Exception class | Raised when | Typical fix |
 |---|---|---|---|
 | `AXW000` | `AxonWeaveError` | Base class; also generic library misuse | Read the message; match on subclass |
-| `AXW001` | `SubstrateNotInstalledError` | `load()` for a substrate not in the local cache | `axonweave substrate install male-cns:v1.0` |
-| `AXW002` | `DatasetIntegrityError` | Manifest identity mismatch, checksum failure, or checkpoint fingerprint mismatch | Reinstall the substrate; never load checkpoints against a different graph |
-| `AXW003` | `SchemaError` | A source data file lacks expected columns | Check the file schema; verify you downloaded the right version |
+| `AXW001` | `SubstrateNotInstalledError` | `load()` for a substrate not in the local cache, or packing a substrate with no installed cache entry | `axonweave substrate install male-cns:v1.0` |
+| `AXW002` | `DatasetIntegrityError` | Manifest identity mismatch, checksum failure, checkpoint fingerprint mismatch, or corrupted/unsafe `.awb` artifact (graph payload, attachment hash, size) | Reinstall the substrate; re-pack or discard the corrupted `.awb`; never load checkpoints against a different graph |
+| `AXW003` | `SchemaError` | A source data file lacks expected columns; an `.awb` artifact is not in the expected format, uses a newer/unknown `schema_version`, or has no migration path | Check the file schema; upgrade AxonWeave to read newer `.awb` schemas |
 | `AXW004` | `UnsupportedDeviceError` | The host framework rejected a device request | Verify CUDA/MPS availability in the framework itself; try `device=None` (framework default) |
 | `AXW005` | `BiologicalAssumptionError` | A dynamics override for an unannotated neuron type was requested | Register the override, or use the default dynamics |
 | `AXW006` | `BackendUnavailableError` | An optional framework (torch, TF) is not installed | `pip install "axonweave[torch]"` |
+| `AXW007` | `ConfigurationWarning` | A non-fatal configuration issue — e.g. an `.awb` schema migration was applied to the manifest at read time | Acknowledge the migration; re-pack the artifact to update it in place |
+| `AXW008` | `AnnotationBuildWarning` | Selection-table construction failed during substrate install | Install will complete; by_type()/by_region() will raise AXW010 at query time |
 | `AXW010` | `ValueError` (prefixed) | API misuse: bad dimensions, unknown IDs/rules/options, missing interface wiring | Read the message; it states the expected and received values |
 | `AXW101` | CLI `SystemExit` | Unknown substrate name on the command line | Use `male-cns:v1.0` |
 
@@ -212,4 +219,5 @@ When adding new errors, follow the house style:
 - [Troubleshooting](troubleshooting.md) — problem → cause → solution for common failures.
 - [Checkpoints](checkpoints.md) — the AXW002 fingerprint-mismatch semantics.
 - [Device Support](devices.md) — AXW004 and framework-delegated execution.
+- [Substrates & .awb artifacts](distribution.md) — AXW001/002/003 in the substrate lifecycle, including schema migrations (AXW007).
 - [API Reference](api-reference.md) — the classes these errors protect.

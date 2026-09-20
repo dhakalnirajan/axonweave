@@ -58,6 +58,9 @@ import readoutsMd from '../content/readouts.md?raw';
 import rustCoreMd from '../content/rust-core.md?raw';
 import runtimeMd from '../content/runtime.md?raw';
 import playgroundMd from '../content/playground.md?raw';
+import glossaryMd from '../content/glossary.md?raw';
+import cliExamplesMd from '../content/cli-examples.md?raw';
+import migrationGuideMd from '../content/migration-guide.md?raw';
 import Playground from './components/playground/Playground';
 
 type Page = { slug: string; label: string; source: string; section: string };
@@ -103,7 +106,11 @@ const pages: Page[] = [
  {slug:'license',label:'License',source:licenseMd,section:'Project'},
  {slug:'code-of-conduct',label:'Code of Conduct',source:codeOfConductMd,section:'Project'},
  {slug:'security',label:'Security Policy',source:securityMd,section:'Project'},
- {slug:'errors',label:'Errors & Diagnostics',source:errorsMd,section:'Reference'}, {slug:'troubleshooting',label:'Troubleshooting',source:troubleshootingMd,section:'Project'},
+ {slug:'errors',label:'Errors & Diagnostics',source:errorsMd,section:'Reference'},
+ {slug:'cli-examples',label:'CLI Examples',source:cliExamplesMd,section:'Reference'},
+ {slug:'glossary',label:'Glossary',source:glossaryMd,section:'Reference'},
+ {slug:'migration-guide',label:'Migration Guide',source:migrationGuideMd,section:'Development'},
+ {slug:'troubleshooting',label:'Troubleshooting',source:troubleshootingMd,section:'Project'},
  {slug:'playground',label:'Playground',source:playgroundMd,section:'Tools'},
  ];
 

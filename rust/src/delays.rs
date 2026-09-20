@@ -137,7 +137,11 @@ pub fn delay_ticks_from_ms<'py>(
     let out = py.allow_threads(|| {
         let mut result = vec![0i64; d.len()];
         for (k, &v) in d.iter().enumerate() {
-            let t = ((v / dt).round() as i64).max(0);
+            // NumPy's np.round uses banker's rounding (ties to even); match it
+            // so the native kernel stays the exact numeric twin of the
+            // _numpy_* reference (AGENTS.md native-core rule).
+            let r = (v / dt).round_ties_even() as i64;
+            let t = r.max(0);
             result[k] = t.min(n_slots - 1);
         }
         result

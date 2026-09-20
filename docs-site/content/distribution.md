@@ -39,11 +39,13 @@ The default cache is under the platform's user cache directory and can be redire
 ## Offline deployment: the `.awb` substrate artifact
 
 An `.awb` file is a versioned AxonWeave substrate artifact: a ZIP archive
-containing a `manifest.json`, the sparse CSR graph (`graph.npz`), optional
-selection tables (`annotations.json`) and optional retained upstream source
-files under `source/`. It packs a substrate that is already installed in the
-local cache — it never embeds the multi-gigabyte raw upstream archive unless
-those files were retained during install.
+containing a `manifest.json`, the sparse CSR graph (`graph.npz`), biological
+metadata attachments (selection tables `annotations.json`, neuron metadata
+`annotations.feather`, `neurotransmitters.feather`, `receptors.json`,
+`stats.feather` — each included when present) and optional retained upstream
+source files under `source/`. It packs a substrate that is already installed
+in the local cache — it never embeds the multi-gigabyte raw upstream archive
+unless those files were retained during install.
 
 ### Pack
 
@@ -72,8 +74,9 @@ axonweave substrate verify ./male-cns-v1.0.awb
 ```
 
 Checks the schema version, the graph content fingerprint against the
-manifest, graph size consistency, and sha256 of every recorded attachment.
-Any mismatch raises `AXW002`; an unsupported or unknown schema raises `AXW003`.
+manifest, graph size consistency, and sha256 of every recorded attachment
+(biological metadata included). Any mismatch raises `AXW002`; an unsupported
+or unknown schema raises `AXW003`.
 
 ### Install from a file
 
@@ -84,19 +87,39 @@ axonweave substrate install-file ./male-cns-v1.0.awb
 The artifact is verified fully before activation: it is extracted into a
 staging directory, validated, then atomically moved into the cache. A
 corrupted or tampered artifact never replaces an existing installation.
-After installation the substrate loads normally:
+Biological metadata files are restored alongside the graph and wired into
+the loaded `BiologicalBrain` (`brain.annotations`, `brain.neurotransmitters`,
+`brain.receptors`). After installation the substrate loads normally:
 
 ```python
 import axonweave
 brain = axonweave.load("male-cns:v1.0")
+brain.neurotransmitters  # restored from the .awb artifact
 ```
 
-### Schema versioning
+### Schema versioning and migration
 
 The manifest carries a `schema_version`. AxonWeave refuses (with `AXW003`)
-to read artifacts whose schema it does not support — it never silently
-reinterprets an old or newer substrate. Older supported schemas may declare
-explicit migrations in future releases.
+to read artifacts whose schema is newer than supported, unknown, or has no
+migration path — it never silently reinterprets a substrate.
+
+Older schemas with registered migrations upgrade automatically: the chain of
+applied migrations is recorded in the loaded manifest (`migrations_applied`)
+and announced with an `AXW007` `ConfigurationWarning` at read time. Migrations
+are transformations of the manifest itself (field renames, layout moves); the
+`migrations_applied` field lists each step, e.g. `["0.9->1.0"]`.
+Re-pack the artifact after a migration to update it in place.
+
+To register a new migration (library developers):
+
+```python
+from axonweave.data.awb import register_migration
+
+@register_migration("1.0", "1.1")
+def _migrate(manifest: dict) -> dict:
+    manifest["new_field"] = manifest.pop("old_field", None)
+    return manifest
+```
 
 ### Error handling
 
@@ -104,7 +127,8 @@ explicit migrations in future releases.
 |------|---------|
 | `AXW001` | Substrate not installed / cache entry incomplete when packing |
 | `AXW002` | Integrity failure: fingerprint, size, attachment hash, or unsafe archive member |
-| `AXW003` | Schema error: not an `.awb` artifact, or unsupported `schema_version` |
+| `AXW003` | Schema error: not an `.awb` artifact, newer/unknown schema, or no migration path |
+| `AXW007` | Warning: a schema migration was applied to the manifest (explicit, non-silent) |
 
 ## Why not bundle it in PyPI?
 

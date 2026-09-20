@@ -5,7 +5,6 @@ import hashlib
 import json
 import shutil
 import sys
-import zipfile
 from pathlib import Path
 
 from . import __version__
@@ -93,6 +92,13 @@ def _do_remove(args):
 
 def _do_verify(args):
     registry = SubstrateRegistry(args.root)
+    if args.name.endswith(".awb"):
+        from .data.awb import verify as awb_verify
+
+        manifest = awb_verify(Path(args.name).expanduser())
+        print(f"Artifact {args.name} verified: {manifest.substrate_id} "
+              f"({manifest.n_neurons:,} neurons, {manifest.n_edges:,} edges)")
+        return 0
     brain = registry.load(args.name)
     target = registry.path(args.name)
     manifest_file = target / "manifest.json"
@@ -134,48 +140,42 @@ def _do_pack(args):
     if not (target / "manifest.json").exists():
         raise SystemExit(f"AXW001: substrate {args.name!r} is not installed.")
     output = Path(args.output).expanduser() if args.output else Path(args.name.replace(":", "-") + ".awb")
-    if output.exists():
-        output.unlink()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    paths = sorted(target.rglob("*"))
-    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
-        for path in paths:
-            if path.is_file():
-                zf.write(path, path.relative_to(target).as_posix())
+    from .data.awb import pack as awb_pack
+
+    manifest = awb_pack(args.name, target, output, __version__)
     size = f"{output.stat().st_size:,} B"
     print(f"Packed {args.name} -> {output} ({size})")
+    print(f"  schema: {manifest.schema_version}  fingerprint: {manifest.graph_fingerprint[:16]}...")
     return 0
 
 
-def _do_unpack(args):
-    archive = Path(args.path).expanduser()
-    if not archive.exists():
-        raise SystemExit(f"AXW002: archive {archive} not found.")
+def _do_install_awb(args):
+    """Install a substrate from a local .awb artifact file."""
+    from .data.awb import install as awb_install
+
     registry = SubstrateRegistry(args.root)
-    with zipfile.ZipFile(archive) as zf:
-        names = zf.namelist()
-        if "manifest.json" not in names:
-            raise SystemExit("AXW002: archive has no manifest.json; not an AxonWeave bundle.")
-        meta = json.loads(zf.read("manifest.json").decode("utf-8"))
-        if not meta.get("id") or meta.get("status") != "installed":
-            raise SystemExit("AXW002: archive manifest is not a valid installed substrate.")
-        target = registry.path(meta["id"])
-        target_resolved = target.resolve()
-        target.mkdir(parents=True, exist_ok=True)
-        for member in zf.infolist():
-            if member.is_dir():
-                continue
-            rel = Path(member.filename.replace("\\", "/"))
-            if rel.is_absolute() or ".." in rel.parts:
-                raise SystemExit(f"AXW002: unsafe archive member {member.filename!r}.")
-            dest = (target / rel).resolve()
-            if not dest.is_relative_to(target_resolved):
-                raise SystemExit(f"AXW002: unsafe archive member {member.filename!r}.")
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            with zf.open(member) as src, dest.open("wb") as out:
-                shutil.copyfileobj(src, out)
-    registry.load(meta["id"])
-    print(f"Unpacked {archive} -> {target}")
+    substrate_id = awb_install(Path(args.path).expanduser(), registry)
+    print(f"Installed {substrate_id} from {args.path}")
+    return 0
+
+
+def _do_inspect(args):
+    """Display manifest metadata of a .awb artifact."""
+    from .data.awb import inspect as awb_inspect
+
+    meta = awb_inspect(Path(args.path).expanduser())
+    graph = meta.get("graph") or {}
+    print(f"Substrate:    {meta.get('substrate_id')}")
+    print(f"Version:      {meta.get('substrate_version')}")
+    print(f"Schema:       awb/{meta.get('schema_version')}")
+    print(f"Fingerprint:  {graph.get('fingerprint', '')[:32]}...")
+    print(f"Neurons:      {graph.get('n_neurons', 0):,}")
+    print(f"Edges:        {graph.get('n_edges', 0):,}")
+    print(f"Builder:      axonweave {meta.get('builder_version')}")
+    if meta.get("license"):
+        print(f"License:      {meta['license']}")
+    if meta.get("source_release"):
+        print(f"Source:       {meta['source_release']}")
     return 0
 
 
@@ -205,13 +205,17 @@ def main(argv=None):
     info.add_argument("name")
     remove = ss.add_parser("remove", help="remove a substrate from the cache")
     remove.add_argument("name")
-    verify = ss.add_parser("verify", help="verify substrate integrity")
+    verify = ss.add_parser("verify", help="verify substrate integrity (name or .awb path)")
     verify.add_argument("name")
-    pack = ss.add_parser("pack", help="pack a substrate into a .awb archive")
+    pack = ss.add_parser("pack", help="pack a substrate into a versioned .awb archive")
     pack.add_argument("name")
     pack.add_argument("--output", default=None, help="output .awb path (default: <name>.awb)")
-    unpack = ss.add_parser("unpack", help="unpack a .awb archive into the cache")
-    unpack.add_argument("path")
+    install_awb = ss.add_parser(
+        "install-file", help="install a substrate from a local .awb artifact"
+    )
+    install_awb.add_argument("path")
+    inspect_awb = ss.add_parser("inspect", help="display .awb artifact manifest metadata")
+    inspect_awb.add_argument("path")
     sub.add_parser("version", help="print version info")
     args = p.parse_args(argv)
 
@@ -222,7 +226,8 @@ def main(argv=None):
         "remove": _do_remove,
         "verify": _do_verify,
         "pack": _do_pack,
-        "unpack": _do_unpack,
+        "install-file": _do_install_awb,
+        "inspect": _do_inspect,
     }
     try:
         if args.cmd == "version":

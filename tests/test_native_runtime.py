@@ -41,9 +41,10 @@ def _canon(m: sparse.csr_matrix) -> sparse.csr_matrix:
 
 
 def _calls(*arrays):
+    """Cast each array to the dtype the native kernels expect: float32 data,
+    int64 indices/indptr (scipy CSR may hand back int32 on some platforms)."""
     return [
-        (np.ascontiguousarray(a, dtype=np.float32) if a.dtype != np.int64
-         else np.ascontiguousarray(a, dtype=np.int64))
+        np.ascontiguousarray(a, dtype=np.int64 if np.issubdtype(a.dtype, np.integer) else np.float32)
         for a in arrays
     ]
 
