@@ -33,7 +33,7 @@
   --accent: #17677e;
   --accent-strong: #0f5266;
   --brand: #ee4c2c;
-  --code: #18181b;
-  --code-border: #2e3135;
+  --code: #f5f5f5;
+  --code-border: #dadce0;
   --shadow: 0 10px 25px rgba(22,34,42,.08);
 }

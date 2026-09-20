@@ -1,7 +1,7 @@
 /* Playground Stats + Code — right panel */
 
 import React, { useEffect, useRef } from 'react';
-import { FiZap, FiLink, FiActivity, FiAlertTriangle, FiCopy, FiCheck, FiInfo } from 'react-icons/fi';
+import { FiCopy, FiCheck } from 'react-icons/fi';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-python';
 import { Neuron } from './types';
@@ -61,15 +61,7 @@ export function StatsCode({
           <pre><code ref={codeRef} className="language-python">{code}</code></pre>
         </div>
       </div>
-      <div className="pg-explain">
-        <h3>How this works</h3>
-        <div className="pg-explain-grid">
-          <div className="pg-explain-card"><FiZap size={18}/><h4>LIF Neuron</h4><p>Membrane integrates current, fires on threshold, resets. tau_m controls leak rate.</p></div>
-          <div className="pg-explain-card"><FiLink size={18}/><h4>Synapses</h4><p>Spikes propagate via weighted synapses. Excitatory (blue) / inhibitory (red).</p></div>
-          <div className="pg-explain-card"><FiActivity size={18}/><h4>Regions</h4><p>Visual, Motor, Association, Sensory. Real MaleCNS uses cell-type annotations.</p></div>
-          <div className="pg-explain-card"><FiAlertTriangle size={18}/><h4>Demo Only</h4><p>Real MaleCNS: 166,700 neurons. This uses {nNeurons} random ones.</p></div>
-        </div>
-      </div>
+
     </div>
   );
 }

@@ -78,6 +78,8 @@ export function Visualization({
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef({ x: 0, y: 0, transform: { scale: 1, x: 0, y: 0 } });
+  const didPanRef = useRef(false);
+  const DRAG_THRESHOLD = 3;
 
   const drawAll = useCallback(() => {
     if (mapCanvasRef.current) drawNeuronMap(mapCanvasRef.current, neurons, synapses, tick, dark, transform, selectedNeuron);
@@ -88,15 +90,12 @@ export function Visualization({
 
   useEffect(() => { drawAll(); }, [drawAll]);
 
-  // Sync transform from props
+  // Sync transform from props (avoid loop: only update if different)
   useEffect(() => {
-    if (panZoom) setTransform(panZoom);
+    if (panZoom && (panZoom.scale !== transform.scale || panZoom.x !== transform.x || panZoom.y !== transform.y)) {
+      setTransform(panZoom);
+    }
   }, [panZoom]);
-
-  // Notify parent of transform changes
-  useEffect(() => {
-    if (onPanZoom) onPanZoom(transform);
-  }, [transform, onPanZoom]);
 
   // Resize handling
   useEffect(() => {
@@ -107,10 +106,16 @@ export function Visualization({
     return () => ro.disconnect();
   }, [drawAll]);
 
-  // Mouse interaction for neuron map
+  // Mouse interaction — left-click drag pans, left-click tap selects neuron
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (e.button === 1 || (e.button === 0 && (e.shiftKey || e.altKey))) {
+    if (e.button === 0) {
       e.preventDefault();
+      didPanRef.current = false;
+      setIsPanning(true);
+      panStartRef.current = { x: e.clientX, y: e.clientY, transform };
+    } else if (e.button === 1) {
+      e.preventDefault();
+      didPanRef.current = true;
       setIsPanning(true);
       panStartRef.current = { x: e.clientX, y: e.clientY, transform };
     }
@@ -120,35 +125,45 @@ export function Visualization({
     if (!isPanning) return;
     const dx = e.clientX - panStartRef.current.x;
     const dy = e.clientY - panStartRef.current.y;
-    setTransform(prev => ({
-      ...prev,
+    if (!didPanRef.current && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+      didPanRef.current = true;
+    }
+    if (!didPanRef.current) return;
+    const newTransform = {
+      ...panStartRef.current.transform,
       x: panStartRef.current.transform.x + dx,
       y: panStartRef.current.transform.y + dy,
-    }));
-  }, [isPanning]);
+    };
+    setTransform(newTransform);
+    if (onPanZoom) onPanZoom(newTransform);
+  }, [isPanning, onPanZoom]);
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
   }, []);
 
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
+  // Native wheel listener with { passive: false } to allow preventDefault
+  useEffect(() => {
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.min(5, Math.max(0.5, transform.scale * zoomFactor));
-
-    // Zoom towards mouse position
-    setTransform(prev => ({
-      scale: newScale,
-      x: mouseX - (mouseX - prev.x) * (newScale / prev.scale),
-      y: mouseY - (mouseY - prev.y) * (newScale / prev.scale),
-    }));
-  }, [transform.scale]);
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.min(5, Math.max(0.5, transform.scale * zoomFactor));
+      const newTransform = {
+        scale: newScale,
+        x: mouseX - (mouseX - transform.x) * (newScale / transform.scale),
+        y: mouseY - (mouseY - transform.y) * (newScale / transform.scale),
+      };
+      setTransform(newTransform);
+      if (onPanZoom) onPanZoom(newTransform);
+    };
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', onWheel);
+  }, [transform, onPanZoom]);
 
   const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = mapCanvasRef.current;
@@ -158,12 +173,12 @@ export function Visualization({
   }, [neurons, transform, onSelectNeuron]);
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isPanning) return; // Don't select during pan
+    if (didPanRef.current) return; // Don't select if we dragged
     const canvas = mapCanvasRef.current;
     if (!canvas) return;
     const neuronId = getNeuronAtPoint(e.clientX, e.clientY, neurons, transform, canvas, 24);
     if (onSelectNeuron) onSelectNeuron(neuronId);
-  }, [neurons, transform, isPanning, onSelectNeuron]);
+  }, [neurons, transform, onSelectNeuron]);
 
   const canvasStyle = { width: '100%', height: '100%', display: 'block' as const, cursor: isPanning ? 'grabbing' : 'grab' };
 
@@ -180,7 +195,6 @@ export function Visualization({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              onWheel={handleWheel}
               onDoubleClick={handleDoubleClick}
               onClick={handleClick}
             />

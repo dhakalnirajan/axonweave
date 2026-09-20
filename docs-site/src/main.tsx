@@ -12,6 +12,7 @@ import { FiMenu, FiMoon, FiSun, FiSearch, FiX, FiChevronRight, FiThumbsUp, FiThu
 import './global.css';
 import './docs.css';
 import './playground.css';
+import './json-render/json-render.css';
 
 import indexMd from '../content/index.md?raw';
 import gettingStartedMd from '../content/getting-started.md?raw';
@@ -51,6 +52,8 @@ import devicesMd from '../content/devices.md?raw';
 import faqMd from '../content/faq.md?raw';
 import limitationsMd from '../content/limitations.md?raw';
 import errorsMd from '../content/errors.md?raw';
+import tutorialLifMd from '../content/tutorial-lif.md?raw';
+import tutorialConnectomeMd from '../content/tutorial-connectome.md?raw';
 import readoutsMd from '../content/readouts.md?raw';
 import rustCoreMd from '../content/rust-core.md?raw';
 import runtimeMd from '../content/runtime.md?raw';
@@ -78,6 +81,8 @@ const pages: Page[] = [
  {slug:'checkpoints',label:'Checkpoints',source:checkpointsMd,section:'Guides'},
  {slug:'examples-pytorch-composition',label:'Custom Layer Composition',source:examplesPytorchCompositionMd,section:'Guides'},
  {slug:'examples-selection',label:'Selection & Sub-Networks',source:examplesSelectionMd,section:'Guides'},
+ {slug:'tutorial-lif',label:'Tutorial: LIF Neurons',source:tutorialLifMd,section:'Guides'},
+ {slug:'tutorial-connectome',label:'Tutorial: Connectomes',source:tutorialConnectomeMd,section:'Guides'},
  {slug:'examples-custom-policy',label:'Custom Signal Policy',source:examplesCustomPolicyMd,section:'Guides'},
  {slug:'framework',label:'Framework API',source:frameworkMd,section:'Reference'},
  {slug:'backends',label:'Backends',source:backendsMd,section:'Reference'},
@@ -122,69 +127,87 @@ const rewriteDocLinks = (html:string) => html.replace(
 const BASE = import.meta.env.BASE_URL;
 const BASE_PREFIX = BASE.endsWith('/') ? BASE.slice(0,-1) : BASE;
 const hrefFor = (slug:string) => `${BASE}${slug==='index'?'':slug}`;
-const pathSlug = () => location.pathname.replace(BASE_PREFIX,'').replace(/^\//,'').replace(/\/$/,'') || 'index';
+const pathSlug = () => {
+  const s = location.pathname.replace(BASE_PREFIX,'').replace(/^\//,'').replace(/\/$/,'');
+  // Empty path always goes to index; never restore last state
+  return s || 'index';
+};
 
 const VERSIONS = ['stable (0.2.0)','nightly'];
 
 function CodeEnhancer({slug}:{slug:string}){
- // Re-run on every page change; slug is the dependency.
  useEffect(()=>{
    Prism.highlightAllUnder(document.querySelector('article') ?? document.body);
-   const blocks=[...document.querySelectorAll('pre')];
+   const blocks=[...(document.querySelector('article') ?? document.body).querySelectorAll('pre')];
    blocks.forEach(pre=>{
-     if(pre.querySelector('button')) return;
-     // Language label chip (e.g. python / bash / toml) from the fence class.
+     if(pre.querySelector('.code-topbar')) return;
      const codeEl=pre.querySelector('code');
      const lang=[...((codeEl?.className||'').match(/language-([\w-]+)/)||[])][1];
-     let hasChip=false;
+      const canCopy=lang==='python'||lang==='rust'||lang==='bash';
+
+     // Create topbar with lang chip + copy button
+     const topbar=document.createElement('div');
+     topbar.className='code-topbar';
      if(lang && lang!=='text' && lang!=='none'){
        const chip=document.createElement('span');
        chip.className='lang-chip';
        chip.setAttribute('aria-hidden','true');
        chip.textContent=lang;
-       pre.appendChild(chip);
-       hasChip=true;
+       topbar.appendChild(chip);
      }
-     // Line-number gutter for long Python blocks (>= 8 lines). The rail is
-     // added to the wrapper (outside the scrolling pre) so it stays pinned
-     // while the code scrolls horizontally.
-     let hasGutter=false;
-     if(lang==='python' && codeEl){
-       const lines=(codeEl.textContent||'').replace(/\n$/,'').split('\n').length;
-       hasGutter=lines>=8;
+     if(canCopy){
+       const button=document.createElement('button');
+       button.className='copy-button';
+       button.setAttribute('aria-label','Copy code');
+       button.innerHTML='<span class="copy-label">Copy</span>';
+       button.onclick=async()=>{
+         await navigator.clipboard.writeText(codeEl?.textContent||'');
+         const label=button.querySelector('.copy-label');
+         button.classList.add('copied');
+         if(label)label.textContent='Copied!';
+         setTimeout(()=>{button.classList.remove('copied');if(label)label.textContent='Copy'},1400);
+       };
+       topbar.appendChild(button);
      }
-     const button=document.createElement('button'); button.className='copy-button'; button.setAttribute('aria-label','Copy code'); button.innerHTML='<span class="copy-label">Copy</span>';
-     button.onclick=async()=>{
-       await navigator.clipboard.writeText(pre.querySelector('code')?.textContent||'');
-       const label=button.querySelector('.copy-label');
-       button.classList.add('copied');
-       if(label)label.textContent='Copied!';
-       setTimeout(()=>{button.classList.remove('copied');if(label)label.textContent='Copy'},1400);
-     };
-     pre.appendChild(button);
-     // Horizontal-scroll hint for blocks wider than their container.
-     const wrap=document.createElement('div'); wrap.className='pre-wrap'+(hasGutter?' has-gutter':'')+(hasChip?' has-chip':'');
-     pre.replaceWith(wrap); wrap.appendChild(pre);
-     const hint=document.createElement('span'); hint.className='scroll-hint'; hint.setAttribute('aria-hidden','true'); hint.textContent='scroll'; hint.classList.add('scroll-arrow');
+
+      // Line numbers for python/rust/bash blocks with 4+ lines
+      let hasLines=false;
+       if((lang==='python'||lang==='rust'||lang==='bash') && codeEl){
+        const lineCount=(codeEl.textContent||'').replace(/\n$/,'').split('\n').length;
+        if(lineCount>=4){
+          hasLines=true;
+          const lineNumbers=document.createElement('div');
+          lineNumbers.className='line-numbers';
+          lineNumbers.setAttribute('aria-hidden','true');
+          let nums='';
+          for(let i=1;i<=lineCount;i++) nums+=i+'\n';
+          lineNumbers.textContent=nums;
+          // Store reference so theme switch can re-render
+          (pre as any).__lineNumbers = lineNumbers;
+          (pre as any).__lineCount = lineCount;
+        }
+      }
+
+      // Wrap in container
+      const wrap=document.createElement('div');
+      wrap.className='codeblock'+(hasLines?' has-lines':'');
+      pre.replaceWith(wrap);
+      if(topbar.children.length>0) wrap.appendChild(topbar);
+      if(hasLines && (pre as any).__lineNumbers) wrap.appendChild((pre as any).__lineNumbers);
+      wrap.appendChild(pre);
+
+     // Scroll hint
+     const hint=document.createElement('span');
+     hint.className='scroll-hint';
+     hint.setAttribute('aria-hidden','true');
+     hint.textContent='scroll';
      wrap.appendChild(hint);
-     if(hasGutter){
-       const rail=document.createElement('span');
-       rail.className='ln-rail';
-       rail.setAttribute('aria-hidden','true');
-       rail.textContent='1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40';
-       wrap.appendChild(rail);
-       // Sync rail height to the code block's rendered height.
-       const sync=()=>{rail.style.height=pre.scrollHeight+'px'};
-       sync();
-       if(typeof ResizeObserver!=='undefined')new ResizeObserver(sync).observe(pre);
-     }
      const update=()=>hint.classList.toggle('visible', pre.scrollWidth > pre.clientWidth + 4);
      update();
-     // Hide the hint permanently once the user scrolls the block.
      pre.addEventListener('scroll',()=>hint.classList.remove('visible'),{once:true,passive:true});
      if(typeof ResizeObserver!=='undefined')new ResizeObserver(update).observe(pre);
    });
-   // Load MathJax for pages containing $$..$$ or $..$ math.
+   // MathJax
    const article=document.querySelector('article');
    if(article && /\$\$[^$]+\$\$|(?<![\\$\w])\$(?!\s)[^$\n]+?(?<!\\)\$(?![\w$])/.test(article.textContent||'') && !(window as any).MathJax){
      const s=document.createElement('script');
@@ -203,8 +226,10 @@ function App(){
  const [mobile,setMobile]=useState(false);
  const [searchOpen,setSearchOpen]=useState(false);
  const [sidebarWidth,setSidebarWidth]=useState<number>(()=>parseInt(localStorage.getItem('axonweave-sidebar')||'240',10));
+ const [tocWidth,setTocWidth]=useState<number>(()=>parseInt(localStorage.getItem('axonweave-toc')||'240',10));
  const [version,setVersion]=useState(VERSIONS[0]);
  const dragRef=useRef<{startX:number,startW:number}|null>(null);
+ const tocDragRef=useRef<{startX:number,startW:number}|null>(null);
  useEffect(()=>{const fn=()=>setSlug(pathSlug()); addEventListener('popstate',fn);return()=>removeEventListener('popstate',fn)},[]);
  useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';localStorage.setItem('axonweave-theme',dark?'dark':'light')},[dark]);
  useEffect(()=>{
@@ -214,6 +239,13 @@ function App(){
    return()=>{removeEventListener('mousemove',onMove);removeEventListener('mouseup',onUp)};
  },[]);
  useEffect(()=>{localStorage.setItem('axonweave-sidebar',String(sidebarWidth))},[sidebarWidth]);
+ useEffect(()=>{
+   const onMove=(e:MouseEvent)=>{if(!tocDragRef.current)return;const w=Math.min(400,Math.max(160,tocDragRef.current.startW-(e.clientX-tocDragRef.current.startX)));setTocWidth(w)};
+   const onUp=()=>{if(tocDragRef.current){tocDragRef.current=null;document.body.classList.remove('resizing')}};
+   addEventListener('mousemove',onMove);addEventListener('mouseup',onUp);
+   return()=>{removeEventListener('mousemove',onMove);removeEventListener('mouseup',onUp)};
+ },[]);
+ useEffect(()=>{localStorage.setItem('axonweave-toc',String(tocWidth))},[tocWidth]);
  // Global search shortcut: Shift + /
  useEffect(()=>{
    const onKey=(e:KeyboardEvent)=>{
@@ -259,7 +291,7 @@ return <><Helmet><meta name="description" content={page?`AxonWeave ${page.label}
           <a className="gh-link" href="https://github.com/dhakalnirajan/axonweave" target="_blank" rel="noreferrer" aria-label="GitHub repository"><FiGithub size={19}/></a>
         </div>
       </header>
-    <div className={`shell${slug==='playground'?' pg-shell':''}`} style={{'--sidebar-w':`${sidebarWidth}px`} as React.CSSProperties}>
+    <div className={`shell${slug==='playground'?' pg-shell':''}`} style={{'--sidebar-w':`${sidebarWidth}px`,'--toc-w':`${tocWidth}px`} as React.CSSProperties}>
     {slug!=='playground'&&mobile&&<div className="sidebar-overlay visible" onClick={()=>setMobile(false)} aria-hidden="true"/>}
     {slug!=='playground'&&<aside className={`sidebar ${mobile?'open':''}`}>
       <div className="sidebar-header">Documentation <button className="icon-button close-mobile" onClick={()=>setMobile(false)}><FiX size={18}/></button></div>
@@ -271,8 +303,10 @@ return <><Helmet><meta name="description" content={page?`AxonWeave ${page.label}
           ? <Playground dark={dark} />
           : (
             <>
-              <nav className="breadcrumbs" aria-label="Breadcrumb"><a className="crumb-link" href={hrefFor('index')} onClick={e=>{e.preventDefault();navigate('index')}}>Docs</a><span>/</span><span className="crumb-here">{page.label}</span></nav>
-              <div className="title-row"><h1 style={{display:'none'}}/><div className="title-row-spacer"/><FeedbackWidget slug={slug}/></div>
+              <div className="doc-meta-row">
+                <nav className="breadcrumbs" aria-label="Breadcrumb"><a className="crumb-link" href={hrefFor('index')} onClick={e=>{e.preventDefault();navigate('index')}}>Docs</a><span>/</span><span className="crumb-here">{page.label}</span></nav>
+                <FeedbackWidget slug={slug}/>
+              </div>
               <article dangerouslySetInnerHTML={{__html:html}}/>
               {slug==='index'&&<div className="hero-cta"><button className="primary" onClick={()=>navigate('getting-started')}>Install AxonWeave</button></div>}
               <CodeEnhancer slug={slug}/>
@@ -282,6 +316,7 @@ return <><Helmet><meta name="description" content={page?`AxonWeave ${page.label}
       ) : <NotFound navigate={navigate}/>}
     </main>
     {page&&slug!=='playground'&&<aside className="toc"><div className="toc-title">On this page</div><Toc slug={slug}/></aside>}
+    {page&&slug!=='playground'&&<div className="toc-resizer" onMouseDown={e=>{tocDragRef.current={startX:e.clientX,startW:tocWidth};document.body.classList.add('resizing')}} role="separator" aria-orientation="vertical" aria-label="Resize table of contents" tabIndex={0}/>}
    </div>
    {slug!=='playground'&&<div className="sidebar-resizer" onMouseDown={e=>{dragRef.current={startX:e.clientX,startW:sidebarWidth};document.body.classList.add('resizing')}} role="separator" aria-orientation="vertical" aria-label="Resize sidebar" tabIndex={0}/>}
    <footer><span>AxonWeave · Apache-2.0 software</span><span><a href={hrefFor('privacy')} onClick={e=>{e.preventDefault();navigate('privacy')}}>Privacy</a> · <a href={hrefFor('terms')} onClick={e=>{e.preventDefault();navigate('terms')}}>Terms</a></span></footer>

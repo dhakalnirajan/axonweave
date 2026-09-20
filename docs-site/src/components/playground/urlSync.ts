@@ -51,6 +51,18 @@ export function readStateFromURL(): Partial<PlaygroundState> {
   return state as Partial<PlaygroundState>;
 }
 
+export const DEFAULT_STATE: PlaygroundState = {
+  nNeurons: 24,
+  density: 0.15,
+  seed: 42,
+  mode: "sine",
+  freq: 3,
+  amplitude: 1.0,
+  tauM: 0.015,
+  speed: 1.0,
+  running: false,
+};
+
 export function writeStateToURL(state: PlaygroundState, replace = true): void {
   if (typeof window === 'undefined') return;
   const params = new URLSearchParams();
@@ -59,7 +71,8 @@ export function writeStateToURL(state: PlaygroundState, replace = true): void {
   for (const key of Object.keys(URL_PARAMS) as (keyof PlaygroundState)[]) {
     const param = URL_PARAMS[key];
     const val = state[key];
-    if (val !== undefined && val !== null) {
+    const def = DEFAULT_STATE[key];
+    if (val !== undefined && val !== null && val !== def) {
       params.set(param, encodeValue(key, val));
       hasParams = true;
     }

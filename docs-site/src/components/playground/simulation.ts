@@ -10,15 +10,28 @@ export { REGIONS, REGION_COLORS, REGION_LABELS } from './types';
 export function generateNetwork(n: number, density: number, seed: number): Network {
   const rng = mulberry32(seed);
   const neurons: Neuron[] = [];
-  const angleStep = (2 * Math.PI) / n;
-  const cx = 0.5, cy = 0.5, r = 0.38;
+  const cx = 0.5, cy = 0.5;
 
-  for (let i = 0; i < n; i++) {
+  // Layer proportions: 25% input, 50% processing, 25% output
+  const nInput = Math.max(1, Math.round(n * 0.25));
+  const nOutput = Math.max(1, Math.round(n * 0.25));
+  const nProcessing = n - nInput - nOutput;
+
+  // Column x positions
+  const xInput = 0.15;
+  const xProcessing = 0.5;
+  const xOutput = 0.85;
+
+  let id = 0;
+
+  // Input layer — left column, evenly spaced vertically
+  for (let i = 0; i < nInput; i++) {
+    const y = 0.12 + (0.76 * i) / Math.max(1, nInput - 1);
     const region = REGIONS[Math.floor(rng() * REGIONS.length)];
     neurons.push({
-      id: i,
-      x: cx + r * Math.cos(angleStep * i - Math.PI / 2) + (rng() - 0.5) * 0.06,
-      y: cy + r * Math.sin(angleStep * i - Math.PI / 2) + (rng() - 0.5) * 0.06,
+      id: id++,
+      x: xInput + (rng() - 0.5) * 0.04,
+      y: y + (rng() - 0.5) * 0.03,
       v: -0.070,
       vRest: -0.070,
       vThresh: -0.050 + (rng() - 0.5) * 0.004,
@@ -29,11 +42,61 @@ export function generateNetwork(n: number, density: number, seed: number): Netwo
     });
   }
 
+  // Processing layer — middle column, scattered
+  for (let i = 0; i < nProcessing; i++) {
+    const y = 0.08 + (0.84 * i) / Math.max(1, nProcessing - 1);
+    const region = REGIONS[Math.floor(rng() * REGIONS.length)];
+    neurons.push({
+      id: id++,
+      x: xProcessing + (rng() - 0.5) * 0.14,
+      y: y + (rng() - 0.5) * 0.04,
+      v: -0.070,
+      vRest: -0.070,
+      vThresh: -0.050 + (rng() - 0.5) * 0.004,
+      tauM: 0.010 + rng() * 0.010,
+      refrac: 0,
+      region,
+      lastSpikeTick: -9999,
+    });
+  }
+
+  // Output layer — right column, evenly spaced vertically
+  for (let i = 0; i < nOutput; i++) {
+    const y = 0.12 + (0.76 * i) / Math.max(1, nOutput - 1);
+    const region = REGIONS[Math.floor(rng() * REGIONS.length)];
+    neurons.push({
+      id: id++,
+      x: xOutput + (rng() - 0.5) * 0.04,
+      y: y + (rng() - 0.5) * 0.03,
+      v: -0.070,
+      vRest: -0.070,
+      vThresh: -0.050 + (rng() - 0.5) * 0.004,
+      tauM: 0.010 + rng() * 0.010,
+      refrac: 0,
+      region,
+      lastSpikeTick: -9999,
+    });
+  }
+
+  // Synapses: feedforward-biased connectivity
   const synapses: Synapse[] = [];
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
       if (i === j) continue;
-      if (rng() < density) {
+      const isInput = i < nInput;
+      const isProcessing = i >= nInput && i < nInput + nProcessing;
+      const isOutput = i >= nInput + nProcessing;
+      const jIsProcessing = j >= nInput && j < nInput + nProcessing;
+      const jIsOutput = j >= nInput + nProcessing;
+
+      // Prefer feedforward: input→processing, processing→output
+      let connectProb = density * 0.3;
+      if (isInput && jIsProcessing) connectProb = density * 1.2;
+      else if (isProcessing && jIsOutput) connectProb = density * 1.2;
+      else if (isProcessing && jIsProcessing) connectProb = density * 0.5;
+      else if (isOutput && jIsProcessing) connectProb = density * 0.3;
+
+      if (rng() < connectProb) {
         const isExcit = rng() > 0.2;
         synapses.push({
           pre: i,

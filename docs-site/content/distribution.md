@@ -36,19 +36,75 @@ Each install records a SHA-256 content fingerprint of the built graph (canonical
 
 The default cache is under the platform's user cache directory and can be redirected with `AXONWEAVE_HOME`.
 
-## Offline deployment
+## Offline deployment: the `.awb` substrate artifact
 
-A future `.awb` pack format is planned. The intended workflow is:
+An `.awb` file is a versioned AxonWeave substrate artifact: a ZIP archive
+containing a `manifest.json`, the sparse CSR graph (`graph.npz`), optional
+selection tables (`annotations.json`) and optional retained upstream source
+files under `source/`. It packs a substrate that is already installed in the
+local cache — it never embeds the multi-gigabyte raw upstream archive unless
+those files were retained during install.
+
+### Pack
 
 ```bash
 axonweave substrate pack male-cns:v1.0 --output male-cns-v1.0.awb
 ```
 
-then on an isolated machine:
+The manifest records the substrate ID and version, source release URL,
+source checksums, graph fingerprint, neuron/edge counts, schema version and
+the AxonWeave builder version. Two independently packed artifacts from the
+same installed substrate produce identical graph fingerprints.
+
+### Inspect
 
 ```bash
-axonweave substrate install ./male-cns-v1.0.awb
+axonweave substrate inspect ./male-cns-v1.0.awb
 ```
+
+Prints manifest metadata (identity, schema, fingerprint, size, provenance)
+without loading the graph.
+
+### Verify
+
+```bash
+axonweave substrate verify ./male-cns-v1.0.awb
+```
+
+Checks the schema version, the graph content fingerprint against the
+manifest, graph size consistency, and sha256 of every recorded attachment.
+Any mismatch raises `AXW002`; an unsupported or unknown schema raises `AXW003`.
+
+### Install from a file
+
+```bash
+axonweave substrate install-file ./male-cns-v1.0.awb
+```
+
+The artifact is verified fully before activation: it is extracted into a
+staging directory, validated, then atomically moved into the cache. A
+corrupted or tampered artifact never replaces an existing installation.
+After installation the substrate loads normally:
+
+```python
+import axonweave
+brain = axonweave.load("male-cns:v1.0")
+```
+
+### Schema versioning
+
+The manifest carries a `schema_version`. AxonWeave refuses (with `AXW003`)
+to read artifacts whose schema it does not support — it never silently
+reinterprets an old or newer substrate. Older supported schemas may declare
+explicit migrations in future releases.
+
+### Error handling
+
+| Code | Meaning |
+|------|---------|
+| `AXW001` | Substrate not installed / cache entry incomplete when packing |
+| `AXW002` | Integrity failure: fingerprint, size, attachment hash, or unsafe archive member |
+| `AXW003` | Schema error: not an `.awb` artifact, or unsupported `schema_version` |
 
 ## Why not bundle it in PyPI?
 

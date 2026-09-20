@@ -147,6 +147,26 @@ export function drawNeuronMap(
     legendX += ctx.measureText(label).width + 24;
   }
 
+  // Layer labels at top
+  ctx.font = '10px IBM Plex Sans, sans-serif';
+  ctx.fillStyle = textColor;
+  ctx.globalAlpha = 0.6;
+  ctx.textAlign = 'center';
+  ctx.fillText('INPUT', sx(0.15), 14);
+  ctx.fillText('PROCESSING', sx(0.5), 14);
+  ctx.fillText('OUTPUT', sx(0.85), 14);
+  ctx.globalAlpha = 1;
+
+  // Vertical dashed layer separators
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = textColor;
+  ctx.globalAlpha = 0.15;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(sx(0.32), pad); ctx.lineTo(sx(0.32), H - pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sx(0.68), pad); ctx.lineTo(sx(0.68), H - pad); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+
   ctx.restore();
 }
 
